@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         exam.questions.forEach((_, index) => {
             const btn = document.createElement('button');
-            btn.className = 'q-map-btn';
+            btn.className = 'q-grid-btn'; // Updated to use the correct CSS styling class name
             btn.textContent = index + 1;
 
             // Highlight state styles
@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 7. EXAM GRADING & SERIALIZATION ---
     
-    // Open Confirmation modal
+    // Open Confirmation modal with dynamic unanswered questions warning
     function openConfirmModal() {
         const answeredCount = state.userAnswers.filter(a => a !== null).length;
         const unansweredCount = exam.questions.length - answeredCount;
@@ -276,10 +276,35 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.confirmUnanswered.textContent = unansweredCount;
         DOM.confirmFlagged.textContent = state.flaggedQuestions.size;
 
+        const warningBox = document.getElementById('unanswered-warning-box');
+        const warningText = document.getElementById('unanswered-warning-text');
+
         if (unansweredCount > 0) {
             DOM.confirmUnanswered.style.color = '#ef4444';
+            
+            // Compile list of unanswered question numbers (1-indexed)
+            const unansweredList = [];
+            state.userAnswers.forEach((ans, idx) => {
+                if (ans === null) {
+                    unansweredList.push(idx + 1);
+                }
+            });
+
+            if (warningBox && warningText) {
+                warningText.innerHTML = `Còn câu <strong>${unansweredList.join(', ')}</strong> bạn chưa làm. Bạn có muốn quay lại hoàn thành không hay nộp luôn?`;
+                warningBox.style.display = 'block';
+            }
+
+            // High-fidelity dynamic button label adjustments
+            if (DOM.modalCancel) DOM.modalCancel.textContent = 'Quay Lại Làm Nốt';
+            if (DOM.modalSubmit) DOM.modalSubmit.textContent = 'Vẫn Nộp Bài Luôn';
         } else {
             DOM.confirmUnanswered.style.color = 'var(--text-muted)';
+            if (warningBox) {
+                warningBox.style.display = 'none';
+            }
+            if (DOM.modalCancel) DOM.modalCancel.textContent = 'Quay Lại Làm Tiếp';
+            if (DOM.modalSubmit) DOM.modalSubmit.textContent = 'Xác Nhận Nộp Bài';
         }
 
         DOM.modalConfirm.classList.add('active');
