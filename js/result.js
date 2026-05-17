@@ -181,16 +181,75 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             });
 
-            // Explanation panel construction
+            // Premium explanation & diagnostic panel construction (Big, clear, and explicitly colored)
+            const isCorrect = userAns === correctAns;
+            const isUnanswered = userAns === null;
+            
             let explanationHTML = '';
-            if (q.explanation) {
+            if (isUnanswered) {
                 explanationHTML = `
-                    <div class="explanation-box">
-                        <div class="exp-header">
-                            <i class="fa-solid fa-lightbulb"></i>
-                            <strong>Giải Thích Đáp Án:</strong>
+                    <div style="margin-top: 16px; padding: 18px 24px; border-radius: var(--radius-md); border-left: 6px solid #6b7280; background: rgba(107, 114, 128, 0.08); display: flex; flex-direction: column; gap: 8px; animation: fadeIn 0.3s ease;">
+                        <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; color: #4b5563; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fa-solid fa-circle-exclamation" style="font-size: 20px; color: #6b7280;"></i>
+                            CÂU HỎI CHƯA LÀM (BỎ QUA) &nbsp;⚠️
                         </div>
-                        <p class="exp-body">${q.explanation}</p>
+                        <div style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; font-weight: 500;">
+                            Bạn chưa chọn câu trả lời nào cho câu hỏi này. Đáp án chính xác bắt buộc là phương án <strong style="color: #4b5563; font-size: 15px;">${String.fromCharCode(65 + correctAns)}</strong>.
+                        </div>
+                        ${q.explanation ? `
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(107, 114, 128, 0.2); font-size: 14px; color: var(--text-primary);">
+                                <strong style="color: #4b5563; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 14px;">
+                                    <i class="fa-solid fa-lightbulb"></i> Hướng dẫn giải thích chi tiết:
+                                </strong>
+                                <span style="line-height: 1.6; display: block; background: var(--bg-primary); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-weight: 500; font-size: 14px;">
+                                    ${q.explanation}
+                                </span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else if (isCorrect) {
+                explanationHTML = `
+                    <div style="margin-top: 16px; padding: 18px 24px; border-radius: var(--radius-md); border-left: 6px solid #10b981; background: rgba(16, 185, 129, 0.08); display: flex; flex-direction: column; gap: 8px; animation: fadeIn 0.3s ease;">
+                        <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; color: #065f46; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fa-solid fa-circle-check" style="font-size: 20px; color: #10b981;"></i>
+                            CÂU HỎI LÀM ĐÚNG &nbsp;✅
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; font-weight: 500;">
+                            Xin chúc mừng! Bạn đã trả lời chính xác phương án <strong style="color: #047857; font-size: 15px;">${String.fromCharCode(65 + userAns)}</strong>.
+                        </div>
+                        ${q.explanation ? `
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(16, 185, 129, 0.2); font-size: 14px; color: var(--text-primary);">
+                                <strong style="color: #065f46; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 14px;">
+                                    <i class="fa-solid fa-lightbulb"></i> Hướng dẫn giải thích chi tiết:
+                                </strong>
+                                <span style="line-height: 1.6; display: block; background: var(--bg-primary); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-weight: 500; font-size: 14px;">
+                                    ${q.explanation}
+                                </span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                explanationHTML = `
+                    <div style="margin-top: 16px; padding: 18px 24px; border-radius: var(--radius-md); border-left: 6px solid #ef4444; background: rgba(239, 68, 68, 0.08); display: flex; flex-direction: column; gap: 8px; animation: fadeIn 0.3s ease;">
+                        <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; color: #991b1b; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fa-solid fa-circle-xmark" style="font-size: 20px; color: #ef4444;"></i>
+                            CÂU HỎI LÀM SAI &nbsp;❌
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; font-weight: 500;">
+                            Bạn chọn phương án <strong style="color: #b91c1c; font-size: 15px;">${String.fromCharCode(65 + userAns)}</strong>. Đáp án chính xác đúng nhất phải là phương án <strong style="color: #047857; font-size: 16px;">${String.fromCharCode(65 + correctAns)}</strong>.
+                        </div>
+                        ${q.explanation ? `
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(239, 68, 68, 0.2); font-size: 14px; color: var(--text-primary);">
+                                <strong style="color: #991b1b; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 14px;">
+                                    <i class="fa-solid fa-lightbulb"></i> Hướng dẫn giải thích chi tiết:
+                                </strong>
+                                <span style="line-height: 1.6; display: block; background: var(--bg-primary); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-weight: 500; font-size: 14px;">
+                                    ${q.explanation}
+                                </span>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }
