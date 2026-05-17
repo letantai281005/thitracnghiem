@@ -247,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 theadRow.innerHTML = `
                     <th>STT</th>
                     <th>Họ Tên Thí Sinh</th>
+                    <th>Phân Loại</th>
                     <th>Đề Thi</th>
                     <th>Ngày Làm</th>
                     <th>Thời Gian Làm</th>
@@ -291,10 +292,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 `<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Chưa Đạt</span>`;
 
             if (isTeacher) {
+                // Find student's actual properties from registration database
+                const users = typeof Students !== 'undefined' ? Students.getAll() : [];
+                const foundUser = users.find(u => u.username.toLowerCase() === attempt.username.toLowerCase());
+                const studentFullName = foundUser ? foundUser.name : attempt.username;
+                const studentClass = foundUser && foundUser.studentType ? foundUser.studentType : 'học sinh';
+
+                let classBadgeStyle = 'background: rgba(14, 165, 233, 0.15); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3);';
+                let classIcon = 'fa-graduation-cap';
+                
+                if (studentClass.toLowerCase() === 'sinh viên') {
+                    classBadgeStyle = 'background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3);';
+                    classIcon = 'fa-university';
+                }
+
                 tr.innerHTML = `
                     <td><strong>${index + 1}</strong></td>
                     <td>
-                        <div style="font-weight: 700; color: var(--text-primary);"><i class="fas fa-user-graduate"></i> &nbsp; ${attempt.username}</div>
+                        <div style="font-weight: 700; color: var(--text-primary);"><i class="fas fa-user-graduate"></i> &nbsp; ${studentFullName}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); padding-left: 20px;">@${attempt.username}</div>
+                    </td>
+                    <td>
+                        <span class="badge" style="${classBadgeStyle} text-transform: capitalize; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid ${classIcon}"></i> ${studentClass}
+                        </span>
                     </td>
                     <td class="history-exam-title" style="font-weight: 500;">${attempt.examTitle}</td>
                     <td>${dateStr}</td>

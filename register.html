@@ -391,6 +391,19 @@
                     </div>
                 </div>
 
+                <!-- Student Type Selector (Visible only when Student role is active) -->
+                <div class="form-group" id="student-type-group" style="margin-bottom: 20px; transition: all 0.3s ease;">
+                    <label class="form-label">Bạn là Học sinh hay Sinh viên? (Chỉ chọn 1 trong 2):</label>
+                    <div class="role-selector-container" style="background-color: rgba(255, 255, 255, 0.05); padding: 4px; border-radius: var(--radius-md); display: flex; gap: 8px;">
+                        <button type="button" class="sub-role-btn active" data-type="học sinh" style="flex: 1; padding: 10px; border: none; background: var(--primary); color: white; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                            <i class="fa-solid fa-graduation-cap"></i> Học sinh
+                        </button>
+                        <button type="button" class="sub-role-btn" data-type="sinh viên" style="flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                            <i class="fa-solid fa-university"></i> Sinh viên
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Avatar selector -->
                 <div class="form-group" style="margin-bottom: 10px;">
                     <label class="avatar-picker-label">Chọn hình ảnh đại diện</label>
@@ -432,6 +445,7 @@
     <script>
         let selectedAvatar = "user-graduate";
         let selectedRole = "student";
+        let selectedStudentType = "học sinh";
 
         // Segmented role control selection logic
         const roleBtns = document.querySelectorAll('.role-btn');
@@ -440,6 +454,30 @@
                 roleBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 selectedRole = btn.getAttribute('data-role');
+
+                // Dynamic display toggle of Student type sub-selector
+                const studentTypeGroup = document.getElementById('student-type-group');
+                if (selectedRole === 'student') {
+                    studentTypeGroup.style.display = 'block';
+                } else {
+                    studentTypeGroup.style.display = 'none';
+                }
+            });
+        });
+
+        // Student type sub-role selector logic
+        const subRoleBtns = document.querySelectorAll('.sub-role-btn');
+        subRoleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                subRoleBtns.forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = 'transparent';
+                    b.style.color = 'var(--text-muted)';
+                });
+                btn.classList.add('active');
+                btn.style.background = 'var(--primary)';
+                btn.style.color = 'white';
+                selectedStudentType = btn.getAttribute('data-type');
             });
         });
 
@@ -464,7 +502,7 @@
             const icon = document.getElementById('banner-icon');
             const text = document.getElementById('banner-text');
 
-            const res = Students.register(username, password, fullname, selectedAvatar, selectedRole);
+            const res = Students.register(username, password, fullname, selectedAvatar, selectedRole, selectedStudentType);
 
             if (res.success) {
                 // Success message

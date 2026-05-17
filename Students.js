@@ -19,6 +19,7 @@ const Students = {
             password: "123",
             name: "Nguyễn Văn Học",
             role: "student",
+            studentType: "sinh viên",
             avatar: "user-graduate",
             createdAt: new Date().toISOString()
         }
@@ -50,6 +51,7 @@ const Students = {
                 name: found.name,
                 role: found.role,
                 avatar: found.avatar,
+                studentType: found.studentType || '',
                 loginTime: new Date().toISOString()
             };
             localStorage.setItem('quizflow_session', JSON.stringify(sessionData));
@@ -59,7 +61,7 @@ const Students = {
     },
 
     // Register a new account (student or teacher)
-    register: function(username, password, name, avatar = "user-graduate", role = "student") {
+    register: function(username, password, name, avatar = "user-graduate", role = "student", studentType = "học sinh") {
         if (!username || !password || !name) {
             return { success: false, message: "Vui lòng điền đầy đủ tất cả thông tin." };
         }
@@ -76,6 +78,7 @@ const Students = {
             password: password,
             name: name.trim(),
             role: role, // Dynamically assign selected role (student or teacher)
+            studentType: role === 'student' ? studentType : '',
             avatar: avatar,
             blocked: false,
             createdAt: new Date().toISOString()
@@ -87,7 +90,7 @@ const Students = {
     },
 
     // Admin: Create or register any user role
-    createAccountByAdmin: function(username, password, name, role = "student", avatar = "user-graduate") {
+    createAccountByAdmin: function(username, password, name, role = "student", avatar = "user-graduate", studentType = "học sinh") {
         if (!username || !password || !name) {
             return { success: false, message: "Vui lòng điền đầy đủ tất cả thông tin." };
         }
@@ -101,6 +104,7 @@ const Students = {
             password: password,
             name: name.trim(),
             role: role,
+            studentType: role === 'student' ? studentType : '',
             avatar: avatar,
             blocked: false,
             createdAt: new Date().toISOString()
