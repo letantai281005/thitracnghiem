@@ -6,10 +6,10 @@
 (function() {
     // 1. Check if user is logged in
     const currentUser = Students.getCurrentUser();
-    const path = window.location.pathname;
-    const isTrangCon = path.includes('/trangcon/');
+    const path = window.location.pathname.toLowerCase();
+    const isTrangCon = path.includes('trangcon');
     
-    // Determine relative paths for redirections
+    // Determine relative paths for redirections (robust check for file:// and http://)
     const loginPage = isTrangCon ? '../login.html' : 'login.html';
     const dashboardPage = isTrangCon ? '../index.html' : 'index.html';
 

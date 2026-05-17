@@ -164,9 +164,9 @@ const Students = {
     // Destroy active session (logout)
     logout: function() {
         localStorage.removeItem('quizflow_session');
-        // Redirect to login page based on current directory level
-        const path = window.location.pathname;
-        if (path.includes('/trangcon/')) {
+        // Redirect to login page based on current directory level (robust check for file:// and http://)
+        const path = window.location.pathname.toLowerCase();
+        if (path.includes('trangcon')) {
             window.location.href = '../login.html';
         } else {
             window.location.href = 'login.html';
