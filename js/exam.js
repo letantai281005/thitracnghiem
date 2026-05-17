@@ -382,6 +382,20 @@ document.addEventListener('DOMContentLoaded', () => {
         globalAttempts.push(attempt);
         localStorage.setItem('quizflow_attempts', JSON.stringify(globalAttempts));
 
+        // Update dynamic active room candidate registry if active room session exists
+        const activeRoomCode = localStorage.getItem('quizflow_active_room_code');
+        if (activeRoomCode) {
+            let candidates = JSON.parse(localStorage.getItem('quizflow_room_candidates') || '[]');
+            const idx = candidates.findIndex(c => c.username.toLowerCase() === currentUser.username.toLowerCase() && c.roomCode.toUpperCase() === activeRoomCode.toUpperCase());
+            if (idx !== -1) {
+                candidates[idx].status = 'finished';
+                candidates[idx].score = scorePercentage;
+                localStorage.setItem('quizflow_room_candidates', JSON.stringify(candidates));
+            }
+            // Clean up session active room code since they finished
+            localStorage.removeItem('quizflow_active_room_code');
+        }
+
         // 5. Save specific active attempt ID for review reference
         localStorage.setItem('quizflow_review_attempt_id', attempt.id);
         

@@ -503,6 +503,132 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
+    // --- 7.4 LIVE MONITOR MONITORING CHAMBER ENGINE ---
+    let monitorIntervalId = null;
+
+    function startLiveRoomMonitor(code) {
+        // Clear any existing monitor interval
+        if (monitorIntervalId) clearInterval(monitorIntervalId);
+        
+        const displayArea = document.getElementById('generated-code-display-area');
+        if (!displayArea) return;
+        
+        // Add the live monitor container if not already added
+        let monitorCard = document.getElementById('live-room-monitor');
+        if (!monitorCard) {
+            monitorCard = document.createElement('div');
+            monitorCard.id = 'live-room-monitor';
+            monitorCard.style.cssText = 'margin-top: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.015); padding: 20px; box-shadow: var(--shadow-sm); animation: dropdownFade 0.3s ease;';
+            displayArea.parentNode.appendChild(monitorCard);
+        }
+        
+        // Define simple style keyframe for pulse green if not exist
+        if (!document.getElementById('pulse-green-style')) {
+            const style = document.createElement('style');
+            style.id = 'pulse-green-style';
+            style.innerText = `
+                @keyframes pulse-green {
+                    0% { opacity: 0.4; }
+                    50% { opacity: 1; }
+                    100% { opacity: 0.4; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        function refreshMonitorData() {
+            const candidates = JSON.parse(localStorage.getItem('quizflow_room_candidates') || '[]');
+            const roomCandidates = candidates.filter(c => c.roomCode.toUpperCase() === code.toUpperCase());
+            
+            monitorCard.innerHTML = `
+                <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <span style="display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-satellite-dish" style="color: #10b981; animation: pulse-green 1.5s infinite;"></i> 
+                        Giám Sát Phòng Thi Live (Mã Phòng: <span style="color: #10b981; font-family: monospace; font-weight: 800; font-size: 17px; background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 4px;">${code}</span>)
+                    </span>
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
+                        <i class="fa-solid fa-user-group"></i> Sĩ số: <strong>${roomCandidates.length}</strong> thí sinh
+                    </span>
+                </h4>
+            `;
+            
+            if (roomCandidates.length === 0) {
+                monitorCard.innerHTML += `
+                    <div style="text-align: center; padding: 24px 0; color: var(--text-muted); font-size: 13px;">
+                        <i class="fa-solid fa-spinner fa-spin" style="margin-bottom: 8px; font-size: 18px; color: #10b981;"></i>
+                        <p>Đang đợi học sinh nhập mã để vào phòng thi...</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let tableRowsHTML = '';
+            roomCandidates.forEach((c, idx) => {
+                const joinedTime = new Date(c.joinedAt).toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                let statusBadge = '';
+                let scoreDisplay = '';
+                
+                if (c.status === 'finished') {
+                    statusBadge = `<span class="badge badge-success" style="padding: 4px 8px; border-radius: 4px;"><i class="fa-solid fa-circle-check"></i> Đã Nộp Bài</span>`;
+                    scoreDisplay = `<strong style="color: var(--primary); font-size: 14px;">${c.score}%</strong>`;
+                } else {
+                    statusBadge = `<span class="badge badge-warning" style="padding: 4px 8px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);"><i class="fa-solid fa-pencil fa-spin"></i> Đang Làm Bài</span>`;
+                    scoreDisplay = `<span style="color: var(--text-muted); font-style: italic; font-size: 12px;">Đang làm...</span>`;
+                }
+                
+                let classBadgeStyle = 'background: rgba(14, 165, 233, 0.15); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3);';
+                let classIcon = 'fa-graduation-cap';
+                if (c.studentType && c.studentType.toLowerCase() === 'sinh viên') {
+                    classBadgeStyle = 'background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3);';
+                    classIcon = 'fa-university';
+                }
+                
+                tableRowsHTML += `
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.03);">
+                        <td style="padding: 10px 8px; font-weight: 700;">${idx + 1}</td>
+                        <td style="padding: 10px 8px; font-weight: 600; color: var(--text-primary);">${c.name} <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(@${c.username})</span></td>
+                        <td style="padding: 10px 8px;">
+                            <span class="badge" style="${classBadgeStyle} text-transform: capitalize; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid ${classIcon}"></i> ${c.studentType || 'học sinh'}
+                            </span>
+                        </td>
+                        <td style="padding: 10px 8px; color: var(--text-secondary); font-size: 12px;">${joinedTime}</td>
+                        <td style="padding: 10px 8px;">${statusBadge}</td>
+                        <td style="padding: 10px 8px; text-align: center;">${scoreDisplay}</td>
+                    </tr>
+                `;
+            });
+            
+            monitorCard.innerHTML += `
+                <div class="table-responsive" style="overflow-x: auto; margin-top: 8px;">
+                    <table class="history-table" style="width: 100%; border-collapse: collapse; display: table !important;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                                <th style="padding: 8px;">STT</th>
+                                <th style="padding: 8px;">Họ Tên Thí Sinh</th>
+                                <th style="padding: 8px;">Phân Loại</th>
+                                <th style="padding: 8px;">Giờ Vào Phòng</th>
+                                <th style="padding: 8px;">Trạng Thái</th>
+                                <th style="padding: 8px; text-align: center;">Điểm Thi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRowsHTML}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        refreshMonitorData();
+        monitorIntervalId = setInterval(refreshMonitorData, 1500);
+    }
+
     // --- 7.5 DYNAMIC ROOM CODE CHAMBER (ROLE-BASED) ---
     const codeEntryCard = document.querySelector('.code-entry-card');
     if (codeEntryCard) {
@@ -556,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const selectedExam = state.exams.find(e => e.id === examId);
                     if (!selectedExam) return;
 
-                    // Generate a random 5-character alphanumeric uppercase code (avoiding confusing chars like I, O, 0, 1)
+                    // Generate a random 5-character alphanumeric uppercase code
                     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
                     let code = '';
                     for (let i = 0; i < 5; i++) {
@@ -607,7 +733,47 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                         });
                     }
+
+                    // Start live monitor instantly
+                    startLiveRoomMonitor(code);
                 });
+
+                // Auto-load live monitor for the most recent active room if it exists
+                const activeRooms = JSON.parse(localStorage.getItem('quizflow_active_rooms') || '[]');
+                if (activeRooms.length > 0) {
+                    const mostRecentRoom = activeRooms[activeRooms.length - 1];
+                    selectExam.value = mostRecentRoom.examId;
+                    
+                    displayArea.innerHTML = `
+                        <div style="padding: 14px 20px; background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; animation: dropdownFade 0.3s ease;">
+                            <span style="font-size: 13px; color: #10b981; font-weight: 600;">
+                                <i class="fa-solid fa-circle-check"></i> Phòng thi đang mở! Hãy chia sẻ mã này cho học sinh để làm bài <strong>"${mostRecentRoom.examTitle}"</strong>:
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 22px; font-weight: 800; color: #10b981; letter-spacing: 3px; font-family: monospace; background: rgba(16, 185, 129, 0.15); padding: 4px 12px; border-radius: 6px; box-shadow: var(--shadow-sm);">${mostRecentRoom.code}</span>
+                                <button class="btn btn-sm" id="btn-copy-room-code" data-code="${mostRecentRoom.code}" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: #10b981; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                                    <i class="fa-solid fa-copy"></i> Sao chép
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    displayArea.style.display = 'block';
+                    
+                    const btnCopy = document.getElementById('btn-copy-room-code');
+                    if (btnCopy) {
+                        btnCopy.addEventListener('click', () => {
+                            navigator.clipboard.writeText(mostRecentRoom.code).then(() => {
+                                btnCopy.innerHTML = `<i class="fa-solid fa-check"></i> Đã chép`;
+                                showToast("Đã sao chép mã phòng vào clipboard!", "success");
+                                setTimeout(() => {
+                                    btnCopy.innerHTML = `<i class="fa-solid fa-copy"></i> Sao chép`;
+                                }, 2000);
+                            });
+                        });
+                    }
+                    
+                    startLiveRoomMonitor(mostRecentRoom.code);
+                }
             }
         } else {
             // It's a student, keep regular student logic but upgrade the join handler to support both static codes and dynamic active rooms!
@@ -615,7 +781,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnEnterByCode = document.getElementById('btn-enter-by-code');
 
             if (btnEnterByCode && inputExamCode) {
-                // Clear any old event listeners by replacing with a clone
                 const newBtn = btnEnterByCode.cloneNode(true);
                 btnEnterByCode.parentNode.replaceChild(newBtn, btnEnterByCode);
 
@@ -661,6 +826,22 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
 
+                        // Dynamic Room Student Registry registration
+                        let candidates = JSON.parse(localStorage.getItem('quizflow_room_candidates') || '[]');
+                        candidates = candidates.filter(c => !(c.username.toLowerCase() === currentUser.username.toLowerCase() && c.roomCode.toUpperCase() === code.toUpperCase()));
+                        candidates.push({
+                            username: currentUser.username,
+                            name: currentUser.name,
+                            studentType: currentUser.studentType || 'học sinh',
+                            roomCode: code,
+                            examId: matchedExam.id,
+                            joinedAt: new Date().toISOString(),
+                            status: 'testing',
+                            score: null
+                        });
+                        localStorage.setItem('quizflow_room_candidates', JSON.stringify(candidates));
+                        localStorage.setItem('quizflow_active_room_code', code);
+
                         showToast(`Đã tìm thấy đề thi: ${matchedExam.title}! Chuẩn bị vào thi...`, "success");
                         setTimeout(() => {
                             localStorage.setItem('quizflow_active_exam_id', matchedExam.id);
@@ -671,7 +852,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                // Add Enter key event listener to input
                 inputExamCode.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         newBtn.click();
