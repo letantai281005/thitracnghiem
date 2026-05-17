@@ -283,4 +283,31 @@ document.addEventListener('DOMContentLoaded', () => {
     renderEvaluationBanner();
     renderMetrics();
     renderDetailedReview();
+
+    // Adjust dashboard navigation buttons for Teachers & Admins
+    if (currentUser.role === 'admin' || currentUser.role === 'teacher') {
+        const toDashboardBtn = document.getElementById('btn-result-to-dashboard');
+        if (toDashboardBtn) {
+            toDashboardBtn.innerHTML = `<i class="fa-solid fa-sliders"></i> Về Trang Quản Trị`;
+            toDashboardBtn.className = "btn btn-outline-success";
+            toDashboardBtn.onclick = () => {
+                window.location.href = 'admin.html';
+            };
+        }
+        
+        const logoBtn = document.getElementById('logo-btn');
+        if (logoBtn) {
+            logoBtn.onclick = () => {
+                window.location.href = 'admin.html';
+            };
+        }
+        
+        const navHomeBtn = document.querySelector('.nav-menu button');
+        if (navHomeBtn) {
+            navHomeBtn.innerHTML = `<i class="fa-solid fa-sliders"></i> Trang Quản Trị`;
+            navHomeBtn.onclick = () => {
+                window.location.href = 'admin.html';
+            };
+        }
+    }
 });

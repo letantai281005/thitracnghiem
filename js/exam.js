@@ -378,10 +378,17 @@ document.addEventListener('DOMContentLoaded', () => {
         window.isSubmittingBypass = true;
 
         // 7. Route redirect
-        showToast("Nộp bài thi thành công! Đang lập bảng điểm...", "success");
-        setTimeout(() => {
-            window.location.href = 'result.html';
-        }, 1200);
+        if (currentUser.role === 'admin' || currentUser.role === 'teacher') {
+            showToast("Đã ghi nhận bài thi! Đang chuyển hướng về Bảng điểm quản trị...", "success");
+            setTimeout(() => {
+                window.location.href = 'admin.html';
+            }, 1200);
+        } else {
+            showToast("Nộp bài thi thành công! Đang lập bảng điểm...", "success");
+            setTimeout(() => {
+                window.location.href = 'result.html';
+            }, 1200);
+        }
     }
 
     // BeforeUnload lock bypass check
