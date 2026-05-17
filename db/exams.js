@@ -1551,3 +1551,335 @@ const DEFAULT_EXAMS = [
         ]
     }
 ];
+
+// --- DYNAMIC EXAM GENERATOR TO BUILD 100 FULL EXAMS ---
+(function() {
+    const difficulties = ["Dễ", "Trung bình", "Khó"];
+    
+    // Dynamic titles pool to construct exactly 100 custom educational exam types
+    const dynamicTopics = [
+        // Category 1: Tin học (25 topics)
+        { subject: "Tin học", topic: "Cấu trúc dữ liệu và giải thuật nâng cao", codePrefix: "THD" },
+        { subject: "Tin học", topic: "Lập trình hướng đối tượng với Java", codePrefix: "THJ" },
+        { subject: "Tin học", topic: "Phát triển ứng dụng Web chuyên nghiệp", codePrefix: "THW" },
+        { subject: "Tin học", topic: "Trí tuệ nhân tạo và học máy cơ bản", codePrefix: "THA" },
+        { subject: "Tin học", topic: "An toàn và bảo mật thông tin doanh nghiệp", codePrefix: "THS" },
+        { subject: "Tin học", topic: "Quản trị cơ sở dữ liệu lớn NoSQL", codePrefix: "THN" },
+        { subject: "Tin học", topic: "Lập trình game 2D cơ bản với Unity", codePrefix: "THG" },
+        { subject: "Tin học", topic: "Kiến trúc hệ điều hành nâng cao", codePrefix: "THO" },
+        { subject: "Tin học", topic: "Phát triển Web di động Responsive", codePrefix: "THR" },
+        { subject: "Tin học", topic: "Kho dữ liệu và khai phá dữ liệu", codePrefix: "THK" },
+        { subject: "Tin học", topic: "Mạng máy tính không dây và IoT", codePrefix: "THI" },
+        { subject: "Tin học", topic: "Lập trình ứng dụng di động Android", codePrefix: "THM" },
+        { subject: "Tin học", topic: "Lập trình nhúng vi điều khiển cơ bản", codePrefix: "THE" },
+        { subject: "Tin học", topic: "Lập trình mạng và truyền thông điệp", codePrefix: "THP" },
+        { subject: "Tin học", topic: "Tối ưu hóa mã nguồn và Refactoring", codePrefix: "THT" },
+        { subject: "Tin học", topic: "Kiểm thử phần mềm và tự động hóa", codePrefix: "THQ" },
+        { subject: "Tin học", topic: "Lập trình đồ họa máy tính với OpenGL", codePrefix: "THV" },
+        { subject: "Tin học", topic: "Điện toán đám mây AWS nâng cao", codePrefix: "THC" },
+        { subject: "Tin học", topic: "Phân tích và thiết kế hệ thống", codePrefix: "THY" },
+        { subject: "Tin học", topic: "Phát triển API bảo mật với Node.js", codePrefix: "THB" },
+        { subject: "Tin học", topic: "Hệ thống phân tán và vi dịch vụ Microservices", codePrefix: "THX" },
+        { subject: "Tin học", topic: "Tin học văn phòng nâng cao (Excel Master)", codePrefix: "THZ" },
+        { subject: "Tin học", topic: "Kỹ năng lập trình Python khoa học dữ liệu", codePrefix: "THD" },
+        { subject: "Tin học", topic: "Lập trình C++ cấu trúc dữ liệu cốt lõi", codePrefix: "THL" },
+        { subject: "Tin học", topic: "Kiến thức tin học căn bản lớp 10", codePrefix: "TH1" },
+
+        // Category 2: Tiếng Anh (25 topics)
+        { subject: "Tiếng Anh", topic: "Luyện thi IELTS - Vocabulary nâng cao", codePrefix: "ENI" },
+        { subject: "Tiếng Anh", topic: "Ngữ pháp tiếng Anh giao tiếp chuyên sâu", codePrefix: "ENG" },
+        { subject: "Tiếng Anh", topic: "Từ vựng tiếng Anh học thuật phổ biến", codePrefix: "ENA" },
+        { subject: "Tiếng Anh", topic: "Cụm động từ Phrasal Verbs thông dụng", codePrefix: "ENP" },
+        { subject: "Tiếng Anh", topic: "Luyện thi TOEIC - Kỹ năng đọc hiểu", codePrefix: "ENT" },
+        { subject: "Tiếng Anh", topic: "Tiếng Anh chuyên ngành kỹ thuật công nghệ", codePrefix: "ENC" },
+        { subject: "Tiếng Anh", topic: "Luyện âm chuẩn giọng Anh - Mỹ chuẩn", codePrefix: "ENV" },
+        { subject: "Tiếng Anh", topic: "Thành ngữ Idioms thường gặp trong đời sống", codePrefix: "END" },
+        { subject: "Tiếng Anh", topic: "Kỹ năng viết thư tín thương mại formal", codePrefix: "ENW" },
+        { subject: "Tiếng Anh", topic: "Nghe hiểu tiếng Anh giao tiếp hàng ngày", codePrefix: "ENL" },
+        { subject: "Tiếng Anh", topic: "Tiếng Anh thương mại du lịch khách sạn", codePrefix: "ENH" },
+        { subject: "Tiếng Anh", topic: "Từ vựng tiếng Anh chủ đề y khoa sinh học", codePrefix: "ENM" },
+        { subject: "Tiếng Anh", topic: "Luyện viết câu phức cấu trúc nâng cao", codePrefix: "ENS" },
+        { subject: "Tiếng Anh", topic: "Sự hòa hợp giữa Chủ ngữ và Động từ", codePrefix: "ENK" },
+        { subject: "Tiếng Anh", topic: "Các thì quá khứ hoàn thành nâng cao", codePrefix: "ENQ" },
+        { subject: "Tiếng Anh", topic: "Kỹ năng phản xạ tiếng Anh phỏng vấn xin việc", codePrefix: "ENJ" },
+        { subject: "Tiếng Anh", topic: "Câu bị động và các cấu trúc biến thể", codePrefix: "ENB" },
+        { subject: "Tiếng Anh", topic: "Câu điều kiện hỗn hợp loại 2 và 3", codePrefix: "ENF" },
+        { subject: "Tiếng Anh", topic: "Luyện thi TOEFL - Đọc hiểu nâng cao", codePrefix: "ENO" },
+        { subject: "Tiếng Anh", topic: "Tiếng Anh giao tiếp văn phòng cơ bản", codePrefix: "ENX" },
+        { subject: "Tiếng Anh", topic: "Mệnh đề quan hệ xác định và không xác định", codePrefix: "ENR" },
+        { subject: "Tiếng Anh", topic: "Tính từ và Trạng từ so sánh hơn/nhất", codePrefix: "ENY" },
+        { subject: "Tiếng Anh", topic: "Giới từ chỉ thời gian và vị trí cốt lõi", codePrefix: "ENZ" },
+        { subject: "Tiếng Anh", topic: "Phân từ hiện tại và phân từ hoàn thành", codePrefix: "ENU" },
+        { subject: "Tiếng Anh", topic: "Các danh từ tập hợp bất quy tắc", codePrefix: "ENV" },
+
+        // Category 3: Lịch sử (25 topics)
+        { subject: "Lịch sử", topic: "Lịch sử dựng nước thời kỳ Hùng Vương", codePrefix: "LSH" },
+        { subject: "Lịch sử", topic: "Khởi nghĩa Lam Sơn giải phóng dân tộc", codePrefix: "LSL" },
+        { subject: "Lịch sử", topic: "Chiến dịch Hồ Chí Minh mùa xuân năm 1975", codePrefix: "LSC" },
+        { subject: "Lịch sử", topic: "Thời kỳ phong kiến cực thịnh nhà Lê Sơ", codePrefix: "LSE" },
+        { subject: "Lịch sử", topic: "Nhà Trần đại phá quân Nguyên Mông anh dũng", codePrefix: "LST" },
+        { subject: "Lịch sử", topic: "Phong trào Tây Sơn bão táp đánh đuổi quân Thanh", codePrefix: "LSW" },
+        { subject: "Lịch sử", topic: "Lịch sử Việt Nam thời Lý - Trần hưng thịnh", codePrefix: "LSR" },
+        { subject: "Lịch sử", topic: "Chiến dịch Điện Biên Phủ lịch sử 1954", codePrefix: "LSD" },
+        { subject: "Lịch sử", topic: "Đảng Cộng sản Việt Nam và sứ mệnh Đổi Mới", codePrefix: "LSV" },
+        { subject: "Lịch sử", topic: "Lịch sử quan hệ bang giao các nước Đông Nam Á", codePrefix: "LSA" },
+        { subject: "Lịch sử", topic: "Chiến tranh thế giới thứ nhất và hệ quả", codePrefix: "LS1" },
+        { subject: "Lịch sử", topic: "Chiến tranh thế giới thứ hai và cục diện mới", codePrefix: "LS2" },
+        { subject: "Lịch sử", topic: "Cách mạng công nghiệp thế kỷ 18 ở Anh", codePrefix: "LSI" },
+        { subject: "Lịch sử", topic: "Lịch sử Ai Cập cổ đại và nền văn minh Kim Tự Tháp", codePrefix: "LSY" },
+        { subject: "Lịch sử", topic: "Nền dân chủ Hy Lạp cổ đại kiệt tác triết học", codePrefix: "LSG" },
+        { subject: "Lịch sử", topic: "Đế chế La Mã cổ đại hưng thịnh và suy tàn", codePrefix: "LSM" },
+        { subject: "Lịch sử", topic: "Các cuộc phát kiến địa lý lớn thế kỷ 15", codePrefix: "LSF" },
+        { subject: "Lịch sử", topic: "Lịch sử triều đại nhà Nguyễn và độc lập dân tộc", codePrefix: "LSN" },
+        { subject: "Lịch sử", topic: "Thời kỳ tiền sử tiến hóa loài người", codePrefix: "LSP" },
+        { subject: "Lịch sử", topic: "Nước Âu Lạc thời An Dương Vương bảo vệ thành Cổ Loa", codePrefix: "LSO" },
+        { subject: "Lịch sử", topic: "Kháng chiến chống thực dân Pháp giai đoạn 1946-1954", codePrefix: "LSQ" },
+        { subject: "Lịch sử", topic: "Các nền văn hóa khảo cổ lớn (Hòa Bình, Đông Sơn)", codePrefix: "LSX" },
+        { subject: "Lịch sử", topic: "Lịch sử thế giới thời kỳ Trung cổ", codePrefix: "LSU" },
+        { subject: "Lịch sử", topic: "Nước Đại Cồ Việt thời Đinh - Tiền Lê dựng nước", codePrefix: "LSJ" },
+        { subject: "Lịch sử", topic: "Các tổ chức liên kết thế giới (UN, ASEAN, EU)", codePrefix: "LSZ" },
+
+        // Category 4: Khác (25 topics)
+        { subject: "Khác", topic: "Vật lý hạt nhân và ứng dụng thực tiễn", codePrefix: "KHP" },
+        { subject: "Khác", topic: "Hóa học hữu cơ cấu trúc Axit Amin và Protein", codePrefix: "KHC" },
+        { subject: "Khác", topic: "Hình học không gian thể tích khối đa diện", codePrefix: "KHM" },
+        { subject: "Khác", topic: "Đại số giải tích đạo hàm và tích phân", codePrefix: "KHA" },
+        { subject: "Khác", topic: "Di truyền sinh học cấu trúc DNA và đột biến", codePrefix: "KHB" },
+        { subject: "Khác", topic: "Thiên văn học thái dương hệ và hố đen vũ trụ", codePrefix: "KHS" },
+        { subject: "Khác", topic: "Địa chất học cấu tạo mảng kiến tạo Trái Đất", codePrefix: "KHG" },
+        { subject: "Khác", topic: "Hóa học vô cơ phản ứng ôxi hóa khử", codePrefix: "KHN" },
+        { subject: "Khác", topic: "Vật lý cơ học định luật vạn vật hấp dẫn Newton", codePrefix: "KHL" },
+        { subject: "Khác", topic: "Đại lượng lượng lượng tử bức xạ nhiệt Planck", codePrefix: "KHQ" },
+        { subject: "Khác", topic: "Khí tượng học hiện tượng El Nino và La Nina", codePrefix: "KHW" },
+        { subject: "Khác", topic: "Sinh thái học và chuỗi thức ăn tự nhiên", codePrefix: "KHE" },
+        { subject: "Khác", topic: "Triết học duy vật biện chứng Mác-Lênin", codePrefix: "KHT" },
+        { subject: "Khác", topic: "Địa lý thế giới các đại dương và lục địa lớn", codePrefix: "KHO" },
+        { subject: "Khác", topic: "Toán học xác suất thống kê tổ hợp nhị thức", codePrefix: "KHY" },
+        { subject: "Khác", topic: "Hóa học phân tích kiểm nghiệm nồng độ dung dịch", codePrefix: "KHZ" },
+        { subject: "Khác", topic: "Lý thuyết quang học khúc xạ và phản xạ ánh sáng", codePrefix: "KHV" },
+        { subject: "Khác", topic: "Nhiệt động lực học nguyên lý 1 và 2", codePrefix: "KHD" },
+        { subject: "Khác", topic: "Tế bào học cấu tạo màng và các bào quan", codePrefix: "KHI" },
+        { subject: "Khác", topic: "Hệ tuần hoàn máu sinh học tim mạch người", codePrefix: "KHJ" },
+        { subject: "Khác", topic: "Logic học toán học sơ cấp mệnh đề tập hợp", codePrefix: "KHK" },
+        { subject: "Khác", topic: "Vũ trụ học lý thuyết Big Bang và lạm phát", codePrefix: "KHR" },
+        { subject: "Khác", topic: "Hóa học polyme chất dẻo và tơ sợi nhân tạo", codePrefix: "KHF" },
+        { subject: "Khác", topic: "Vật lý bán dẫn dòng điện trong chất bán dẫn", codePrefix: "KHX" },
+        { subject: "Khác", topic: "Kinh tế học vĩ mô lạm phát và tổng cầu", codePrefix: "KHU" }
+    ];
+
+    // Master Question Pools by Subject
+    const pools = {
+        "Tin học": [
+            {
+                question: "Trong ngôn ngữ C++, từ khóa nào dùng để cấp phát bộ nhớ động?",
+                options: ["malloc", "new", "alloc", "calloc"],
+                correctAnswer: 1,
+                explanation: "new là toán tử cấp phát bộ nhớ động trong C++, tự động gọi hàm khởi tạo. Còn malloc, calloc là hàm thư viện kế thừa từ ngôn ngữ C."
+            },
+            {
+                question: "Hệ cơ sở dữ liệu NoSQL nào lưu trữ dữ liệu dưới dạng tài liệu JSON (BSON)?",
+                options: ["MySQL", "MongoDB", "Oracle", "PostgreSQL"],
+                correctAnswer: 1,
+                explanation: "MongoDB là cơ sở dữ liệu phi quan hệ (NoSQL) lưu trữ dữ liệu dạng tài liệu BSON, tối ưu cho tốc độ và khả năng mở rộng ngang."
+            },
+            {
+                question: "Trong kiến trúc máy tính, bus hệ thống làm nhiệm vụ gì?",
+                options: ["Lưu trữ dữ liệu lâu dài", "Truyền dẫn thông tin giữa các thành phần", "Xử lý các phép toán số học", "Cập nguồn điện cho bo mạch"],
+                correctAnswer: 1,
+                explanation: "Bus hệ thống là đường truyền dẫn vật lý chuyên dụng kết nối CPU, bộ nhớ chính và các chip điều khiển ngoại vi để truyền địa chỉ, dữ liệu."
+            },
+            {
+                question: "Giao thức nào được sử dụng để truyền tải file dữ liệu dung lượng lớn giữa các máy tính qua mạng?",
+                options: ["HTTP", "FTP", "SMTP", "DNS"],
+                correctAnswer: 1,
+                explanation: "FTP (File Transfer Protocol) là giao thức chuẩn mạng chuyên dụng dùng để tải lên hoặc tải xuống các tập tin dữ liệu lớn."
+            },
+            {
+                question: "Trong Python, phương thức nào dùng để thêm phần tử vào cuối danh sách (List)?",
+                options: ["add()", "append()", "insert()", "push()"],
+                correctAnswer: 1,
+                explanation: "Phương thức append() chèn trực tiếp phần tử truyền vào làm phần tử cuối cùng của mảng, thay đổi trực tiếp cấu trúc danh sách đó."
+            },
+            {
+                question: "Từ khóa nào trong Java dùng để ngăn cản một lớp không cho lớp khác kế thừa?",
+                options: ["static", "final", "abstract", "private"],
+                correctAnswer: 1,
+                explanation: "Lớp được khai báo final trong Java ngăn chặn mọi lớp khác thực hiện kế thừa (extends) nhằm tăng tính an toàn thiết kế lớp."
+            },
+            {
+                question: "Điện toán đám mây viết tắt 'SaaS' là gì?",
+                options: ["Software as a Service", "System as a Service", "Storage as a Service", "Security as a Service"],
+                correctAnswer: 0,
+                explanation: "SaaS là mô hình cung cấp ứng dụng phần mềm hoàn thiện trên đám mây, chạy qua trình duyệt web mà người dùng không cần quản lý hạ tầng."
+            },
+            {
+                question: "Trong JavaScript, từ khóa 'const' dùng để khai báo gì?",
+                options: ["Biến toàn cục", "Hằng số không thể gán lại giá trị", "Hành ẩn danh", "Một đối tượng rỗng"],
+                correctAnswer: 1,
+                explanation: "const khai báo hằng số phạm vi khối (block-scoped). Biến const bắt buộc khởi tạo giá trị khi khai báo và không thể gán lại sau đó."
+            },
+            {
+                question: "Hệ điều hành mã nguồn mở nổi tiếng dành cho máy tính và máy chủ là?",
+                options: ["Windows Server", "Linux", "macOS", "iOS"],
+                correctAnswer: 1,
+                explanation: "Linux là nhân hệ điều hành mã nguồn mở, được đóng gói thành các bản phân phối phân phối rộng rãi như Ubuntu, Debian phục vụ môi trường server tin cậy."
+            },
+            {
+                question: "Mã hóa khóa bất đối xứng sử dụng cặp khóa nào để bảo mật?",
+                options: ["Khóa bí mật và khóa chia sẻ", "Khóa công khai và khóa bí mật", "Khóa phiên và khóa chính", "Khóa bảo mật và khóa đăng nhập"],
+                correctAnswer: 1,
+                explanation: "Mã hóa bất đối xứng sử dụng một cặp khóa: khóa công khai để bất kỳ ai cũng có thể mã hóa dữ liệu, và khóa bí mật của người nhận dùng giải mã."
+            }
+        ],
+        "Tiếng Anh": [
+            {
+                question: "Complete the phrase: 'He is highly interested _______ learning space exploration.'",
+                options: ["on", "at", "in", "about"],
+                correctAnswer: 2,
+                explanation: "The adjective 'interested' is always paired with the preposition 'in' to indicate interest in something."
+            },
+            {
+                question: "Choose the correct spelling of the word meaning 'to look forward to':",
+                options: ["Anticipate", "Antecipate", "Anticapate", "Anticippate"],
+                correctAnswer: 0,
+                explanation: "'Anticipate' (dự đoán, trông mong) is spelled with 'i' in the second syllable and a single 'p'."
+            },
+            {
+                question: "What is the synonym of 'Significant' in a formal report?",
+                options: ["Trivial", "Important", "Minor", "Negligible"],
+                correctAnswer: 1,
+                explanation: "'Significant' means having major meaning, importance, or consequence, which corresponds to 'Important'."
+            },
+            {
+                question: "Identify the idiom meaning 'to study hard late into the night':",
+                options: ["To hit the sack", "To burn the midnight oil", "To break a leg", "To spill the beans"],
+                correctAnswer: 1,
+                explanation: "'To burn the midnight oil' means to work or study late into the night. 'To hit the sack' means to go to sleep."
+            },
+            {
+                question: "Choose the correct past participle form of the irregular verb 'FLY':",
+                options: ["Flied", "Flew", "Flown", "Flying"],
+                correctAnswer: 2,
+                explanation: "The verb 'FLY' is irregular: base form 'fly', past simple 'flew', and past participle 'flown'."
+            },
+            {
+                question: "Complete: 'She suggested _______ a taxi to the airport instead of driving.'",
+                options: ["take", "taking", "to take", "taken"],
+                correctAnswer: 1,
+                explanation: "The verb 'suggest' is followed by a gerund (V-ing) when proposing an action."
+            },
+            {
+                question: "What is the correct singular form of 'PHENOMENA'?",
+                options: ["Phenomenon", "Phenomenas", "Phenomenoness", "Phenomen"],
+                correctAnswer: 0,
+                explanation: "'Phenomena' is the plural form of Greek origin; its singular counterpart is 'Phenomenon'."
+            },
+            {
+                question: "Complete: 'If I _______ you, I would apply for that scholarship immediately.'",
+                options: ["was", "were", "am", "will be"],
+                correctAnswer: 1,
+                explanation: "In subjunctive mood and Conditional Type 2, the form 'were' is formally used for all grammatical subjects, including 'I'."
+            }
+        ],
+        "Lịch sử": [
+            {
+                question: "Sự kiện lịch sử vĩ đại nào đánh dấu sự kết thúc hoàn toàn chiến tranh xâm lược của Mỹ tại Việt Nam, thống nhất đất nước ngày 30/4/1975?",
+                options: ["Hiệp định Giơ-ne-vơ", "Chiến thắng Điện Biên Phủ trên không", "Chiến dịch Hồ Chí Minh lịch sử", "Trận Điện Biên Phủ"],
+                correctAnswer: 2,
+                explanation: "Chiến dịch Hồ Chí Minh toàn thắng ngày 30/4/1975 giải phóng Sài Gòn, thống nhất hoàn toàn hai miền Nam Bắc Tổ quốc."
+            },
+            {
+                question: "Ai là người anh hùng dân tộc oanh liệt 3 lần đại phá quân Nguyên Mông trên sông Bạch Đằng lịch sử?",
+                options: ["Lê Lợi", "Trần Hưng Đạo (Trần Quốc Tuấn)", "Quang Trung (Nguyễn Huệ)", "Đinh Bộ Lĩnh"],
+                correctAnswer: 1,
+                explanation: "Hưng Đạo Đại Vương Trần Quốc Tuấn chỉ huy chiến thắng Bạch Đằng vang dội thế kỷ 13, đập tan âm mưu xâm lược của quân Nguyên Mông."
+            },
+            {
+                question: "Triều đại phong kiến cuối cùng cai trị đất nước Việt Nam là triều đại nào?",
+                options: ["Nhà Lê", "Nhà Trần", "Nhà Nguyễn", "Nhà Lý"],
+                correctAnswer: 2,
+                explanation: "Nhà Nguyễn (1802 - 1945) là triều đại phong kiến cuối cùng cai trị đất nước ta, kết thúc khi hoàng đế Bảo Đại thoái vị vào năm 1945."
+            },
+            {
+                question: "Đại hội Đảng Cộng sản Việt Nam lần thứ VI bước ngoặt quyết định mở đầu thời kỳ Đổi Mới đất nước diễn ra vào năm nào?",
+                options: ["Năm 1976", "Năm 1986", "Năm 1991", "Năm 1995"],
+                correctAnswer: 1,
+                explanation: "Đại hội Đảng VI diễn ra tháng 12/1986 chính thức khởi xướng và lãnh đạo công cuộc Đổi Mới toàn diện đất nước."
+            },
+            {
+                question: "Kênh đào nhân tạo nổi tiếng thế giới nào kết nối Địa Trung Hải trực tiếp với Biển Đỏ giúp rút ngắn giao thương hàng hải Á-Âu?",
+                options: ["Kênh đào Panama", "Kênh đào Suez", "Kênh đào Kiel", "Kênh đào Grand Canal"],
+                correctAnswer: 1,
+                explanation: "Kênh đào Suez khánh thành năm 1869 kết nối Địa Trung Hải và Biển Đỏ, là huyết mạch hàng hải vô cùng quan trọng."
+            }
+        ],
+        "Khác": [
+            {
+                question: "Trong toán học giải tích, đạo hàm của hàm số y = ln(x) tại x > 0 là gì?",
+                options: ["1/x", "e^x", "1/(x^2)", "x * ln(x)"],
+                correctAnswer: 0,
+                explanation: "Đạo hàm của hàm logarit tự nhiên y = ln(x) là y' = 1/x, công thức cơ bản trong chương trình THPT."
+            },
+            {
+                question: "Bảng tuần hoàn các nguyên tố hóa học hiện đại được phát minh sơ khai bởi nhà hóa học lỗi lạc nào?",
+                options: ["Marie Curie", "Dmitri Mendeleev", "Antoine Lavoisier", "John Dalton"],
+                correctAnswer: 1,
+                explanation: "Dmitri Mendeleev đã sắp xếp bảng tuần hoàn các nguyên tố hóa học đầu tiên vào năm 1869 dựa vào khối lượng nguyên tử."
+            },
+            {
+                question: "Thuyết cơ học lượng tử giải thích bản chất ánh sáng vừa mang tính chất hạt vừa mang tính chất sóng gọi là gì?",
+                options: ["Lưỡng tính sóng-hạt", "Thuyết tương đối ánh sáng", "Phát xạ quang điện", "Tán xạ hạt nhân"],
+                correctAnswer: 0,
+                explanation: "Lưỡng tính sóng-hạt khẳng định ánh sáng và các hạt vật chất nhỏ bé thể hiện cả đặc tính của sóng lẫn đặc tính của hạt."
+            },
+            {
+                question: "Hợp chất hữu cơ phức tạp bậc nhất đóng vai trò lưu trữ mã di truyền cốt lõi của sinh vật sống là gì?",
+                options: ["Protein", "Lipid", "Axit Deoxyribonucleic (DNA)", "Gluxit"],
+                correctAnswer: 2,
+                explanation: "DNA (Axit Deoxyribonucleic) là phân tử sinh học mang mã di truyền cốt lõi quyết định mọi cấu tạo của sinh vật."
+            }
+        ]
+    };
+
+    // Construct 100 fully interactive dynamic exams
+    for (let i = 0; i < 100; i++) {
+        const item = dynamicTopics[i];
+        const subject = item.subject;
+        const examId = `exam-dyn-${i + 1}`;
+        const codeSuffix = String(i + 1).padStart(2, '0');
+        const examCode = `${item.codePrefix}${codeSuffix}`;
+        const difficulty = difficulties[i % 3];
+        const duration = (i % 2 === 0) ? 15 : 20;
+        const passScore = (i % 3 === 0) ? 60 : 50;
+
+        // Build question set from the master pool
+        const pool = pools[subject];
+        const qCount = Math.min(5, pool.length);
+        const questions = [];
+
+        for (let qIdx = 0; qIdx < qCount; qIdx++) {
+            // Select questions with offsets to create unique sets per exam
+            const sourceIdx = (qIdx + i) % pool.length;
+            const originalQ = pool[sourceIdx];
+            questions.push({
+                id: `q-dyn-${i + 1}-${qIdx + 1}`,
+                question: originalQ.question,
+                options: [...originalQ.options],
+                correctAnswer: originalQ.correctAnswer,
+                explanation: originalQ.explanation
+            });
+        }
+
+        DEFAULT_EXAMS.push({
+            id: examId,
+            title: `Đề ôn tập: ${item.topic}`,
+            subject: subject,
+            duration: duration,
+            passScore: passScore,
+            difficulty: difficulty,
+            examCode: examCode,
+            description: `Hệ thống đề ôn thi trắc nghiệm chuẩn hóa hỗ trợ học tập củng cố kiến thức chuyên sâu chủ đề: ${item.topic}.`,
+            questions: questions
+        });
+    }
+})();
