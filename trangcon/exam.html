@@ -266,12 +266,7 @@
     <script src="../js/exam.js"></script>
 
     <script>
-        // Guard against leaving exam accidentally
-        window.addEventListener('beforeunload', (e) => {
-            e.preventDefault();
-            e.returnValue = 'Bạn có chắc chắn muốn rời phòng thi? Toàn bộ quá trình làm bài hiện tại sẽ bị hủy bỏ!';
-        });
-
+        // Exit exam functionality
         function triggerExitExam() {
             if (confirm("Cảnh báo: Nếu bạn quay lại Trang chủ lúc này, kết quả bài thi hiện tại sẽ không được lưu! Bạn vẫn muốn tiếp tục?")) {
                 window.location.href = '../index.html';

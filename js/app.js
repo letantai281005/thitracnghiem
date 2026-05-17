@@ -630,11 +630,267 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 7.5 DYNAMIC ROOM CODE CHAMBER (ROLE-BASED) ---
+    // Inject styles for premium countdown overlay
+    if (!document.getElementById('quizflow-countdown-styles')) {
+        const style = document.createElement('style');
+        style.id = 'quizflow-countdown-styles';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: scale(1.02); }
+                to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes spin-slow {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showCountdownOverlay(room, exam, startTime) {
+        const existing = document.getElementById('quizflow-countdown-overlay');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'quizflow-countdown-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 15, 30, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            animation: fadeIn 0.4s ease-out;
+        `;
+
+        const glassContainer = document.createElement('div');
+        glassContainer.style.cssText = `
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 40px;
+            width: 90%;
+            max-width: 580px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        `;
+
+        const lightGlow = document.createElement('div');
+        lightGlow.style.cssText = `
+            position: absolute;
+            top: -150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        `;
+        glassContainer.appendChild(lightGlow);
+
+        const iconDiv = document.createElement('div');
+        iconDiv.innerHTML = `<i class="fa-solid fa-hourglass-half" style="font-size: 48px; color: #6366f1; animation: spin-slow 8s linear infinite;"></i>`;
+        iconDiv.style.cssText = `
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        `;
+        glassContainer.appendChild(iconDiv);
+
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `z-index: 1;`;
+        infoDiv.innerHTML = `
+            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #818cf8; letter-spacing: 2px; background: rgba(99, 102, 241, 0.15); padding: 4px 12px; border-radius: 20px;">PHÒNG THI CHỜ KÍCH HOẠT</span>
+            <h2 style="font-size: 24px; font-weight: 800; margin: 12px 0 8px 0; background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${exam.title}</h2>
+            <div style="display: flex; gap: 16px; justify-content: center; font-size: 13px; color: #94a3b8;">
+                <span><i class="fa-solid fa-graduation-cap" style="color: #6366f1;"></i> ${exam.subject}</span>
+                <span>•</span>
+                <span><i class="fa-solid fa-clock" style="color: #6366f1;"></i> ${exam.duration} phút</span>
+                <span>•</span>
+                <span><i class="fa-solid fa-file-invoice" style="color: #6366f1;"></i> ${exam.questions.length} câu</span>
+            </div>
+        `;
+        glassContainer.appendChild(infoDiv);
+
+        const countdownWrapper = document.createElement('div');
+        countdownWrapper.style.cssText = `
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+            z-index: 1;
+        `;
+
+        function createDigitBox(label) {
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = `
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            `;
+            const box = document.createElement('div');
+            box.style.cssText = `
+                width: 76px;
+                height: 76px;
+                border-radius: 16px;
+                background: rgba(15, 23, 42, 0.6);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 32px;
+                font-weight: 800;
+                font-family: 'Plus Jakarta Sans', monospace;
+                color: #6366f1;
+                text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            `;
+            const lbl = document.createElement('span');
+            lbl.style.cssText = `
+                font-size: 11px;
+                font-weight: 700;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            `;
+            lbl.textContent = label;
+            wrapper.appendChild(box);
+            wrapper.appendChild(lbl);
+            return { wrapper, box };
+        }
+
+        const hoursBox = createDigitBox("Giờ");
+        const minutesBox = createDigitBox("Phút");
+        const secondsBox = createDigitBox("Giây");
+
+        countdownWrapper.appendChild(hoursBox.wrapper);
+        const colon1 = document.createElement('span');
+        colon1.style.cssText = `font-size: 32px; font-weight: 800; color: #475569; margin-bottom: 24px;`;
+        colon1.textContent = ":";
+        countdownWrapper.appendChild(colon1);
+        countdownWrapper.appendChild(minutesBox.wrapper);
+        const colon2 = document.createElement('span');
+        colon2.style.cssText = `font-size: 32px; font-weight: 800; color: #475569; margin-bottom: 24px;`;
+        colon2.textContent = ":";
+        countdownWrapper.appendChild(colon2);
+        countdownWrapper.appendChild(secondsBox.wrapper);
+
+        glassContainer.appendChild(countdownWrapper);
+
+        const footerDiv = document.createElement('div');
+        footerDiv.style.cssText = `z-index: 1; width: 100%;`;
+        footerDiv.innerHTML = `
+            <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.1); border-radius: 12px; padding: 14px 20px; font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <i class="fa-solid fa-circle-info" style="color: #6366f1;"></i>
+                <span>Phòng thi sẽ tự động bắt đầu khi thời gian đếm ngược kết thúc.</span>
+            </div>
+        `;
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = "btn btn-outline-danger";
+        cancelBtn.style.cssText = `
+            width: 100%;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        `;
+        cancelBtn.innerHTML = `<i class="fa-solid fa-arrow-left"></i> &nbsp; Hủy và Quay Lại`;
+        footerDiv.appendChild(cancelBtn);
+
+        glassContainer.appendChild(footerDiv);
+        overlay.appendChild(glassContainer);
+        document.body.appendChild(overlay);
+
+        let intervalId = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = startTime.getTime() - now;
+
+            if (distance <= 0) {
+                clearInterval(intervalId);
+                overlay.remove();
+                
+                let candidates = JSON.parse(localStorage.getItem('quizflow_room_candidates') || '[]');
+                candidates = candidates.filter(c => !(c.username.toLowerCase() === currentUser.username.toLowerCase() && c.roomCode.toUpperCase() === room.code.toUpperCase()));
+                candidates.push({
+                    username: currentUser.username,
+                    name: currentUser.name,
+                    studentType: currentUser.studentType || 'học sinh',
+                    roomCode: room.code,
+                    examId: exam.id,
+                    joinedAt: new Date().toISOString(),
+                    status: 'testing',
+                    score: null
+                });
+                localStorage.setItem('quizflow_room_candidates', JSON.stringify(candidates));
+                localStorage.setItem('quizflow_active_room_code', room.code);
+
+                showToast(`Phòng thi đã mở! Chúc bạn thi tốt.`, "success");
+                setTimeout(() => {
+                    localStorage.setItem('quizflow_active_exam_id', exam.id);
+                    window.location.href = 'trangcon/exam.html';
+                }, 1000);
+                return;
+            }
+
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            hoursBox.box.textContent = hours.toString().padStart(2, '0');
+            minutesBox.box.textContent = minutes.toString().padStart(2, '0');
+            secondsBox.box.textContent = seconds.toString().padStart(2, '0');
+        }, 1000);
+
+        // Pre-tick instantly
+        const nowTick = new Date().getTime();
+        const distanceTick = startTime.getTime() - nowTick;
+        if (distanceTick > 0) {
+            const hours = Math.floor((distanceTick % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distanceTick % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distanceTick % (1000 * 60)) / 1000);
+            hoursBox.box.textContent = hours.toString().padStart(2, '0');
+            minutesBox.box.textContent = minutes.toString().padStart(2, '0');
+            secondsBox.box.textContent = seconds.toString().padStart(2, '0');
+        }
+
+        cancelBtn.addEventListener('click', () => {
+            clearInterval(intervalId);
+            overlay.remove();
+            showToast("Đã hủy tham gia phòng thi chờ.", "info");
+        });
+    }
+
     const codeEntryCard = document.querySelector('.code-entry-card');
     if (codeEntryCard) {
         const isTeacherOrAdmin = currentUser.role === 'admin' || currentUser.role === 'teacher';
         if (isTeacherOrAdmin) {
-            // Render Teacher/Admin Room Code Generator
+            // Render Teacher/Admin Room Code Generator with start time support
             let optionsHTML = '<option value="">-- Chọn bài kiểm tra --</option>';
             state.exams.forEach(exam => {
                 optionsHTML += `<option value="${exam.id}">${exam.title} (${exam.subject})</option>`;
@@ -648,16 +904,23 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="fa-solid fa-circle-plus"></i>
                             </div>
                             <div>
-                                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Tạo Mã Phòng Thi Đặc Quyền</h3>
-                                <p style="font-size: 13px; color: var(--text-secondary);">Chọn đề thi để tạo mã phòng thi gồm 5 ký tự ngẫu nhiên cung cấp cho học viên.</p>
+                                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Tạo Mã Phòng Thi (Giáo Viên)</h3>
+                                <p style="font-size: 13px; color: var(--text-secondary);">Giáo viên tạo mã phòng thi và cài đặt thời gian mở bài thực tế.</p>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                            <select id="select-exam-room" style="padding: 12px 16px; font-size: 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-primary); color: var(--text-primary); outline: none; width: 250px; cursor: pointer; font-weight: 600;">
-                                ${optionsHTML}
-                            </select>
+                        <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Đề thi trắc nghiệm</label>
+                                <select id="select-exam-room" style="padding: 12px 16px; font-size: 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-primary); color: var(--text-primary); outline: none; width: 220px; cursor: pointer; font-weight: 600;">
+                                    ${optionsHTML}
+                                </select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Giờ mở thi (Tùy chọn)</label>
+                                <input type="datetime-local" id="input-room-start-time" style="padding: 12px 16px; font-size: 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-primary); color: var(--text-primary); outline: none; width: 220px; cursor: pointer; font-weight: 600;">
+                            </div>
                             <button class="btn btn-primary" id="btn-generate-room-code" style="padding: 12px 24px; background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">
-                                <i class="fa-solid fa-bolt"></i> &nbsp; Tạo Mã Phòng
+                                <i class="fa-solid fa-bolt"></i> &nbsp; Tạo Mã Phòng (Giáo Viên)
                             </button>
                         </div>
                     </div>
@@ -666,9 +929,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // Wire up event listener for generating code
             const btnGenerate = document.getElementById('btn-generate-room-code');
             const selectExam = document.getElementById('select-exam-room');
+            const startTimeInput = document.getElementById('input-room-start-time');
             const displayArea = document.getElementById('generated-code-display-area');
 
             if (btnGenerate && selectExam && displayArea) {
@@ -682,6 +945,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const selectedExam = state.exams.find(e => e.id === examId);
                     if (!selectedExam) return;
 
+                    const startTimeVal = startTimeInput.value;
+                    
                     // Generate a random 5-character alphanumeric uppercase code
                     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
                     let code = '';
@@ -691,23 +956,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Save active room inside localStorage
                     const activeRooms = JSON.parse(localStorage.getItem('quizflow_active_rooms') || '[]');
-                    
-                    // Filter out old room codes for the same exam to prevent duplicate room mappings
                     const cleanRooms = activeRooms.filter(r => r.examId !== examId && r.code !== code);
                     cleanRooms.push({
                         code: code,
                         examId: examId,
                         examTitle: selectedExam.title,
+                        startTime: startTimeVal ? new Date(startTimeVal).toISOString() : null,
                         createdAt: new Date().toISOString()
                     });
 
                     localStorage.setItem('quizflow_active_rooms', JSON.stringify(cleanRooms));
 
-                    // Show success display
+                    let timeInfoHTML = '';
+                    if (startTimeVal) {
+                        const startD = new Date(startTimeVal);
+                        timeInfoHTML = `<div style="font-size: 12px; color: #10b981; margin-top: 4px; font-weight: 500;"><i class="fa-solid fa-calendar-clock"></i> Bắt đầu thi vào: <strong>${startD.toLocaleString('vi-VN')}</strong></div>`;
+                    } else {
+                        timeInfoHTML = `<div style="font-size: 12px; color: #10b981; margin-top: 4px; font-weight: 500;"><i class="fa-solid fa-bolt"></i> Có thể vào thi ngay lập tức</div>`;
+                    }
+
                     displayArea.innerHTML = `
                         <div style="padding: 14px 20px; background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; animation: dropdownFade 0.3s ease;">
                             <span style="font-size: 13px; color: #10b981; font-weight: 600;">
                                 <i class="fa-solid fa-circle-check"></i> Phòng thi đã mở! Hãy chia sẻ mã này cho học sinh để làm bài <strong>"${selectedExam.title}"</strong>:
+                                ${timeInfoHTML}
                             </span>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <span style="font-size: 22px; font-weight: 800; color: #10b981; letter-spacing: 3px; font-family: monospace; background: rgba(16, 185, 129, 0.15); padding: 4px 12px; border-radius: 6px; box-shadow: var(--shadow-sm);">${code}</span>
@@ -720,7 +992,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     displayArea.style.display = 'block';
                     showToast(`Tạo mã phòng ${code} thành công!`, "success");
 
-                    // Wire up copy button
                     const btnCopy = document.getElementById('btn-copy-room-code');
                     if (btnCopy) {
                         btnCopy.addEventListener('click', () => {
@@ -734,7 +1005,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
 
-                    // Start live monitor instantly
                     startLiveRoomMonitor(code);
                 });
 
@@ -743,11 +1013,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (activeRooms.length > 0) {
                     const mostRecentRoom = activeRooms[activeRooms.length - 1];
                     selectExam.value = mostRecentRoom.examId;
+                    if (mostRecentRoom.startTime) {
+                        // Set value locally for visual persistence
+                        const localD = new Date(mostRecentRoom.startTime);
+                        const formatD = localD.getFullYear() + '-' + 
+                                       String(localD.getMonth()+1).padStart(2, '0') + '-' + 
+                                       String(localD.getDate()).padStart(2, '0') + 'T' + 
+                                       String(localD.getHours()).padStart(2, '0') + ':' + 
+                                       String(localD.getMinutes()).padStart(2, '0');
+                        startTimeInput.value = formatD;
+                    }
+
+                    let timeInfoHTML = '';
+                    if (mostRecentRoom.startTime) {
+                        const startD = new Date(mostRecentRoom.startTime);
+                        timeInfoHTML = `<div style="font-size: 12px; color: #10b981; margin-top: 4px; font-weight: 500;"><i class="fa-solid fa-calendar-clock"></i> Bắt đầu thi vào: <strong>${startD.toLocaleString('vi-VN')}</strong></div>`;
+                    } else {
+                        timeInfoHTML = `<div style="font-size: 12px; color: #10b981; margin-top: 4px; font-weight: 500;"><i class="fa-solid fa-bolt"></i> Có thể vào thi ngay lập tức</div>`;
+                    }
                     
                     displayArea.innerHTML = `
                         <div style="padding: 14px 20px; background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; animation: dropdownFade 0.3s ease;">
                             <span style="font-size: 13px; color: #10b981; font-weight: 600;">
                                 <i class="fa-solid fa-circle-check"></i> Phòng thi đang mở! Hãy chia sẻ mã này cho học sinh để làm bài <strong>"${mostRecentRoom.examTitle}"</strong>:
+                                ${timeInfoHTML}
                             </span>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <span style="font-size: 22px; font-weight: 800; color: #10b981; letter-spacing: 3px; font-family: monospace; background: rgba(16, 185, 129, 0.15); padding: 4px 12px; border-radius: 6px; box-shadow: var(--shadow-sm);">${mostRecentRoom.code}</span>
@@ -809,7 +1098,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             return;
                         }
 
-                        // Check schedule timing limits
+                        // Check dynamic scheduled start time from the room
+                        if (matchedRoom && matchedRoom.startTime) {
+                            const startTime = new Date(matchedRoom.startTime);
+                            const now = new Date();
+                            if (now < startTime) {
+                                // Scheduled start time has not arrived yet! Show visual countdown overlay
+                                showCountdownOverlay(matchedRoom, matchedExam, startTime);
+                                return;
+                            }
+                        }
+
+                        // Check static schedule timing limits (if any)
                         const now = new Date();
                         if (matchedExam.startDate) {
                             const start = new Date(matchedExam.startDate);

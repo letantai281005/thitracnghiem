@@ -157,11 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
             q.options.forEach((optText, optIdx) => {
                 let optClass = 'review-option';
                 let optIcon = '';
+                let fontWeightStyle = '';
 
                 // Style based on correctness
                 if (optIdx === correctAns) {
                     optClass += ' correct';
-                    optIcon = '<div class="opt-badge"><i class="fas fa-check"></i> Đáp án đúng</div>';
+                    optIcon = '<div class="opt-badge"><i class="fas fa-check"></i></div>';
+                    fontWeightStyle = 'font-weight: 800;'; // Make text bolder
                 } else if (optIdx === userAns) {
                     optClass += ' incorrect';
                     optIcon = '<div class="opt-badge"><i class="fas fa-times"></i> Lựa chọn của bạn</div>';
@@ -172,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="${optClass}">
                         <div class="opt-left">
                             <span class="opt-letter">${prefix}</span>
-                            <span class="opt-text">${optText}</span>
+                            <span class="opt-text" style="${fontWeightStyle}">${optText}</span>
                         </div>
                         ${optIcon}
                     </div>

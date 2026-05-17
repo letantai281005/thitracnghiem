@@ -52,26 +52,26 @@ document.addEventListener('DOMContentLoaded', () => {
         timerCircle: document.getElementById('timer-progress-circle'),
         progressBar: document.getElementById('exam-progress-bar'),
         progressText: document.getElementById('exam-progress-text'),
-        
+
         // Question Card
         qIndexLabel: document.getElementById('current-question-index-label'),
         qText: document.getElementById('current-question-text'),
         optionsContainer: document.getElementById('options-list-container'),
         flagBtn: document.getElementById('btn-flag-question'),
-        
+
         // Side navigation map
         mapContainer: document.getElementById('questions-grid-map-container'),
         statTotal: document.getElementById('sidebar-total-q'),
         statAnswered: document.getElementById('sidebar-answered-q'),
         statFlagged: document.getElementById('sidebar-flagged-q'),
-        
+
         // Nav Buttons
         prevBtn: document.getElementById('btn-prev-question'),
         nextBtn: document.getElementById('btn-next-question'),
         flagQuickBtn: document.getElementById('btn-quick-flag'),
         submitBtn: document.getElementById('btn-finalize-exam'),
         emergencySubmitBtn: document.getElementById('btn-emergency-submit'),
-        
+
         // Modal Confirm
         modalConfirm: document.getElementById('modal-submit-confirm'),
         modalCancel: document.getElementById('btn-confirm-cancel'),
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmAnswered: document.getElementById('confirm-answered-q'),
         confirmUnanswered: document.getElementById('confirm-unanswered-q'),
         confirmFlagged: document.getElementById('confirm-flagged-q'),
-        
+
         themeToggle: document.getElementById('theme-toggle')
     };
 
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 4. EXAM ENGINE TIMERS ---
     function startTimer() {
         updateTimerDisplay();
-        
+
         state.timerInterval = setInterval(() => {
             state.timeLeft--;
             updateTimerDisplay();
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateTimerDisplay() {
         const mins = Math.floor(state.timeLeft / 60);
         const secs = state.timeLeft % 60;
-        
+
         // Formatted text
         const minsStr = mins.toString().padStart(2, '0');
         const secsStr = secs.toString().padStart(2, '0');
@@ -118,10 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalDuration = exam.duration * 60;
         const pct = (state.timeLeft / totalDuration) * 100;
         const circleStrokeLength = 100; // mapped to stroke-dasharray="100, 100"
-        
+
         if (DOM.timerCircle) {
             DOM.timerCircle.style.strokeDasharray = `${pct}, 100`;
-            
+
             // Add alert colors if below 15% time left
             if (pct < 15) {
                 DOM.timerCircle.style.stroke = '#ef4444'; // Red alert
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 6. NAVIGATION MATRICES (SIDE PANEL) ---
     function updateQuestionMap() {
         DOM.mapContainer.innerHTML = '';
-        
+
         exam.questions.forEach((_, index) => {
             const btn = document.createElement('button');
             btn.className = 'q-grid-btn'; // Updated to use the correct CSS styling class name
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     DOM.flagQuickBtn.addEventListener('click', toggleFlag);
 
     // --- 7. EXAM GRADING & SERIALIZATION ---
-    
+
     // Open Confirmation modal with dynamic unanswered questions warning
     function openConfirmModal() {
         const answeredCount = state.userAnswers.filter(a => a !== null).length;
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (unansweredCount > 0) {
             DOM.confirmUnanswered.style.color = '#ef4444';
-            
+
             // Compile list of unanswered question numbers (1-indexed)
             const unansweredList = [];
             state.userAnswers.forEach((ans, idx) => {
@@ -314,24 +314,18 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.modalConfirm.classList.remove('active');
     }
 
-    // Check and decide whether to prompt warning modal or submit instantly
-    function handleBeforeSubmitClick() {
-        const answeredCount = state.userAnswers.filter(a => a !== null).length;
-        const unansweredCount = exam.questions.length - answeredCount;
-
-        if (unansweredCount > 0) {
-            // Remind about unanswered questions
-            openConfirmModal();
-        } else {
-            // Immediately end exam and show score
-            submitExam(false);
-        }
+    // Direct submit on button click – no confirmation modal, no cheating count increment
+    function handleSubmitClick() {
+        // Reset anti‑cheat warnings before a legitimate submission
+        tabSwitchWarnings = 0;
+        // Force immediate submission and go to result page
+        submitExam(true);
     }
 
-    DOM.submitBtn.addEventListener('click', handleBeforeSubmitClick);
-    DOM.emergencySubmitBtn.addEventListener('click', handleBeforeSubmitClick);
-    DOM.modalCancel.addEventListener('click', closeConfirmModal);
-    
+    if (DOM.submitBtn) DOM.submitBtn.addEventListener('click', handleSubmitClick);
+    if (DOM.emergencySubmitBtn) DOM.emergencySubmitBtn.addEventListener('click', handleSubmitClick);
+    if (DOM.modalCancel) DOM.modalCancel.addEventListener('click', closeConfirmModal);
+
     DOM.modalSubmit.addEventListener('click', () => {
         submitExam(false);
     });
@@ -402,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 5. Save specific active attempt ID for review reference
         localStorage.setItem('quizflow_review_attempt_id', attempt.id);
-        
+
         // 6. Clean active exam context
         localStorage.removeItem('quizflow_active_exam_id');
 
@@ -436,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
+
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('quizflow_theme', newTheme);
             updateThemeIcon(newTheme);
@@ -461,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
-        
+
         let icon = 'info-circle';
         if (type === 'success') icon = 'check-circle';
         if (type === 'error') icon = 'exclamation-circle';
@@ -484,11 +478,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 9.5 ANTI-CHEAT GUARDIAN SYSTEM ---
     // ==========================================================================
     let tabSwitchWarnings = 0;
-    
+
     function initAntiCheatEngine() {
         const savedConfig = localStorage.getItem('quizflow_anticheat_config');
         const config = savedConfig ? JSON.parse(savedConfig) : { tabSwitch: true, disableCopy: true, fullscreen: true };
-        
+
         // 1. Tab switching warning
         if (config.tabSwitch) {
             document.addEventListener('visibilitychange', () => {
