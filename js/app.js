@@ -412,59 +412,182 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // --- 7.5 EXAM CODE ENTRY CHAMBER ---
-    const inputExamCode = document.getElementById('input-exam-code');
-    const btnEnterByCode = document.getElementById('btn-enter-by-code');
+    // --- 7.5 DYNAMIC ROOM CODE CHAMBER (ROLE-BASED) ---
+    const codeEntryCard = document.querySelector('.code-entry-card');
+    if (codeEntryCard) {
+        const isTeacherOrAdmin = currentUser.role === 'admin' || currentUser.role === 'teacher';
+        if (isTeacherOrAdmin) {
+            // Render Teacher/Admin Room Code Generator
+            let optionsHTML = '<option value="">-- Chọn bài kiểm tra --</option>';
+            state.exams.forEach(exam => {
+                optionsHTML += `<option value="${exam.id}">${exam.title} (${exam.subject})</option>`;
+            });
 
-    if (btnEnterByCode && inputExamCode) {
-        btnEnterByCode.addEventListener('click', () => {
-            const code = inputExamCode.value.trim().toUpperCase();
-            if (code.length !== 5) {
-                showToast("Mã đề thi phải bao gồm đúng 5 ký tự!", "warning");
-                return;
-            }
+            codeEntryCard.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 16px;">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="width: 46px; height: 46px; border-radius: var(--radius-md); background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: var(--shadow-inset);">
+                                <i class="fa-solid fa-circle-plus"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Tạo Mã Phòng Thi Đặc Quyền</h3>
+                                <p style="font-size: 13px; color: var(--text-secondary);">Chọn đề thi để tạo mã phòng thi gồm 5 ký tự ngẫu nhiên cung cấp cho học viên.</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <select id="select-exam-room" style="padding: 12px 16px; font-size: 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-primary); color: var(--text-primary); outline: none; width: 250px; cursor: pointer; font-weight: 600;">
+                                ${optionsHTML}
+                            </select>
+                            <button class="btn btn-primary" id="btn-generate-room-code" style="padding: 12px 24px; background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">
+                                <i class="fa-solid fa-bolt"></i> &nbsp; Tạo Mã Phòng
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Target for displaying generated code -->
+                    <div id="generated-code-display-area" style="display: none; width: 100%;"></div>
+                </div>
+            `;
 
-            // Search exams in state.exams
-            const matched = state.exams.find(e => e.examCode && e.examCode.toUpperCase() === code);
-            if (matched) {
-                if (matched.questions.length === 0) {
-                    showToast("Đề thi này chưa có câu hỏi nào! Vui lòng liên hệ Admin.", "error");
-                    return;
-                }
+            // Wire up event listener for generating code
+            const btnGenerate = document.getElementById('btn-generate-room-code');
+            const selectExam = document.getElementById('select-exam-room');
+            const displayArea = document.getElementById('generated-code-display-area');
 
-                // Check schedule timing limits
-                const now = new Date();
-                if (matched.startDate) {
-                    const start = new Date(matched.startDate);
-                    if (now < start) {
-                        showToast(`Đề thi này chưa mở! Thời gian bắt đầu: ${start.toLocaleString('vi-VN')}`, "warning");
+            if (btnGenerate && selectExam && displayArea) {
+                btnGenerate.addEventListener('click', () => {
+                    const examId = selectExam.value;
+                    if (!examId) {
+                        showToast("Vui lòng chọn bài kiểm tra trước khi tạo mã phòng!", "warning");
                         return;
                     }
-                }
-                if (matched.endDate) {
-                    const end = new Date(matched.endDate);
-                    if (now > end) {
-                        showToast(`Kỳ thi này đã kết thúc vào lúc: ${end.toLocaleString('vi-VN')}`, "error");
+
+                    const selectedExam = state.exams.find(e => e.id === examId);
+                    if (!selectedExam) return;
+
+                    // Generate a random 5-character alphanumeric uppercase code (avoiding confusing chars like I, O, 0, 1)
+                    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                    let code = '';
+                    for (let i = 0; i < 5; i++) {
+                        code += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+
+                    // Save active room inside localStorage
+                    const activeRooms = JSON.parse(localStorage.getItem('quizflow_active_rooms') || '[]');
+                    
+                    // Filter out old room codes for the same exam to prevent duplicate room mappings
+                    const cleanRooms = activeRooms.filter(r => r.examId !== examId && r.code !== code);
+                    cleanRooms.push({
+                        code: code,
+                        examId: examId,
+                        examTitle: selectedExam.title,
+                        createdAt: new Date().toISOString()
+                    });
+
+                    localStorage.setItem('quizflow_active_rooms', JSON.stringify(cleanRooms));
+
+                    // Show success display
+                    displayArea.innerHTML = `
+                        <div style="padding: 14px 20px; background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.4); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; animation: dropdownFade 0.3s ease;">
+                            <span style="font-size: 13px; color: #10b981; font-weight: 600;">
+                                <i class="fa-solid fa-circle-check"></i> Phòng thi đã mở! Hãy chia sẻ mã này cho học sinh để làm bài <strong>"${selectedExam.title}"</strong>:
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 22px; font-weight: 800; color: #10b981; letter-spacing: 3px; font-family: monospace; background: rgba(16, 185, 129, 0.15); padding: 4px 12px; border-radius: 6px; box-shadow: var(--shadow-sm);">${code}</span>
+                                <button class="btn btn-sm" id="btn-copy-room-code" data-code="${code}" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: #10b981; color: #fff; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                                    <i class="fa-solid fa-copy"></i> Sao chép
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    displayArea.style.display = 'block';
+                    showToast(`Tạo mã phòng ${code} thành công!`, "success");
+
+                    // Wire up copy button
+                    const btnCopy = document.getElementById('btn-copy-room-code');
+                    if (btnCopy) {
+                        btnCopy.addEventListener('click', () => {
+                            navigator.clipboard.writeText(code).then(() => {
+                                btnCopy.innerHTML = `<i class="fa-solid fa-check"></i> Đã chép`;
+                                showToast("Đã sao chép mã phòng vào clipboard!", "success");
+                                setTimeout(() => {
+                                    btnCopy.innerHTML = `<i class="fa-solid fa-copy"></i> Sao chép`;
+                                }, 2000);
+                            });
+                        });
+                    }
+                });
+            }
+        } else {
+            // It's a student, keep regular student logic but upgrade the join handler to support both static codes and dynamic active rooms!
+            const inputExamCode = document.getElementById('input-exam-code');
+            const btnEnterByCode = document.getElementById('btn-enter-by-code');
+
+            if (btnEnterByCode && inputExamCode) {
+                // Clear any old event listeners by replacing with a clone
+                const newBtn = btnEnterByCode.cloneNode(true);
+                btnEnterByCode.parentNode.replaceChild(newBtn, btnEnterByCode);
+
+                newBtn.addEventListener('click', () => {
+                    const code = inputExamCode.value.trim().toUpperCase();
+                    if (code.length !== 5) {
+                        showToast("Mã đề thi phải bao gồm đúng 5 ký tự!", "warning");
                         return;
                     }
-                }
 
-                showToast(`Đã tìm thấy đề thi: ${matched.title}! Chuẩn bị vào thi...`, "success");
-                setTimeout(() => {
-                    localStorage.setItem('quizflow_active_exam_id', matched.id);
-                    window.location.href = 'trangcon/exam.html';
-                }, 1000);
-            } else {
-                showToast("Mã đề thi không tồn tại hoặc đã bị gỡ bỏ!", "error");
-            }
-        });
+                    // 1. First search in dynamic active rooms created by teachers
+                    const activeRooms = JSON.parse(localStorage.getItem('quizflow_active_rooms') || '[]');
+                    const matchedRoom = activeRooms.find(r => r.code === code);
 
-        // Add Enter key event listener
-        inputExamCode.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                btnEnterByCode.click();
+                    let matchedExam = null;
+                    if (matchedRoom) {
+                        matchedExam = state.exams.find(e => e.id === matchedRoom.examId);
+                    } else {
+                        // 2. Fallback search static code in state.exams
+                        matchedExam = state.exams.find(e => e.examCode && e.examCode.toUpperCase() === code);
+                    }
+
+                    if (matchedExam) {
+                        if (matchedExam.questions.length === 0) {
+                            showToast("Đề thi này chưa có câu hỏi nào! Vui lòng liên hệ Giáo viên.", "error");
+                            return;
+                        }
+
+                        // Check schedule timing limits
+                        const now = new Date();
+                        if (matchedExam.startDate) {
+                            const start = new Date(matchedExam.startDate);
+                            if (now < start) {
+                                showToast(`Đề thi này chưa mở! Thời gian bắt đầu: ${start.toLocaleString('vi-VN')}`, "warning");
+                                return;
+                            }
+                        }
+                        if (matchedExam.endDate) {
+                            const end = new Date(matchedExam.endDate);
+                            if (now > end) {
+                                showToast(`Kỳ thi này đã kết thúc vào lúc: ${end.toLocaleString('vi-VN')}`, "error");
+                                return;
+                            }
+                        }
+
+                        showToast(`Đã tìm thấy đề thi: ${matchedExam.title}! Chuẩn bị vào thi...`, "success");
+                        setTimeout(() => {
+                            localStorage.setItem('quizflow_active_exam_id', matchedExam.id);
+                            window.location.href = 'trangcon/exam.html';
+                        }, 1000);
+                    } else {
+                        showToast("Mã phòng thi không tồn tại hoặc đã hết hạn!", "error");
+                    }
+                });
+
+                // Add Enter key event listener to input
+                inputExamCode.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        newBtn.click();
+                    }
+                });
             }
-        });
+        }
     }
 
     // --- 8. PAGE INITS ---
