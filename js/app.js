@@ -35,6 +35,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load active settings in forms
     const inputName = document.getElementById('input-profile-name');
+    // Seed Classrooms and Notifications for demo if empty
+    const seedClassrooms = localStorage.getItem('quizflow_classrooms');
+    if (!seedClassrooms || JSON.parse(seedClassrooms).length === 0) {
+        const demoClassrooms = [
+            {
+                id: "classroom-demo-1",
+                name: "Lớp Tin Học Đại Cương A2",
+                code: "TINHOC88",
+                teacherUsername: "teacher1",
+                teacherName: "Giảng viên A",
+                createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
+                members: [
+                    { username: "student1", name: "Nguyễn Văn A", studentType: "sinh viên", joinedAt: Date.now() - 9 * 24 * 60 * 60 * 1000 },
+                    { username: "student2", name: "Trần Thị B", studentType: "sinh viên", joinedAt: Date.now() - 8 * 24 * 60 * 60 * 1000 },
+                    { username: "student3", name: "Lê Văn C", studentType: "sinh viên", joinedAt: Date.now() - 7 * 24 * 60 * 60 * 1000 }
+                ],
+                assignments: [
+                    {
+                        id: "assign-demo-1",
+                        examId: "exam-0",
+                        examTitle: "Đề Thi Ôn Tập Tin Học Văn Phòng Premium",
+                        assignedAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
+                        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+                    }
+                ]
+            },
+            {
+                id: "classroom-demo-2",
+                name: "Lớp Tiếng Anh Học Thuật B2",
+                code: "TIENGANH",
+                teacherUsername: "teacher1",
+                teacherName: "Giảng viên A",
+                createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
+                members: [
+                    { username: "student1", name: "Nguyễn Văn A", studentType: "sinh viên", joinedAt: Date.now() - 4 * 24 * 60 * 60 * 1000 }
+                ],
+                assignments: []
+            }
+        ];
+        localStorage.setItem('quizflow_classrooms', JSON.stringify(demoClassrooms));
+    }
+
+    const seedNotifications = localStorage.getItem('quizflow_notifications');
+    if (!seedNotifications) {
+        const demoNotifs = [
+            {
+                id: "notif-demo-1",
+                username: "student1",
+                title: "Bài tập mới được giao!",
+                message: "Giáo viên Giảng viên A đã giao bài tập \"Đề Thi Ôn Tập Tin Học Văn Phòng Premium\" cho lớp \"Lớp Tin Học Đại Cương A2\". Hạn chót: " + new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleString('vi-VN'),
+                type: "assignment",
+                isRead: false,
+                createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000
+            },
+            {
+                id: "notif-demo-2",
+                username: "student1",
+                title: "Chào mừng bạn đến với Lớp học!",
+                message: "Chào mừng Nguyễn Văn A, bạn đã tham gia thành công lớp học \"Lớp Tin Học Đại Cương A2\".",
+                type: "system",
+                isRead: true,
+                createdAt: Date.now() - 9 * 24 * 60 * 60 * 1000
+            }
+        ];
+        localStorage.setItem('quizflow_notifications', JSON.stringify(demoNotifs));
+    }
+
     if (inputName) inputName.value = currentUser.name;
 
     let state = {
