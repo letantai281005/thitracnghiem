@@ -198,3 +198,15 @@ const Students = {
 
 // Initialize seeding automatically
 Students.getAll();
+
+// Global event delegation for all logout buttons to bypass any timing, caching, or propagation issues
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.logout-btn, #logout-btn, #profile-logout-btn');
+    if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?")) {
+            Students.logout();
+        }
+    }
+}, true); // Capture phase ensures this runs first and reliably
