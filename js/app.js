@@ -84,8 +84,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Performance statistics
     function renderStats() {
-        const myAttempts = getStudentAttempts();
-        const total = myAttempts.length;
+        const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
+        
+        // Dynamically adjust labels for teacher role
+        if (isTeacher) {
+            const labels = document.querySelectorAll('.stats-grid .stat-label');
+            if (labels.length >= 4) {
+                labels[0].textContent = "Thí Sinh Hoàn Thành";
+                labels[1].textContent = "Điểm Số Trung Bình";
+                labels[2].textContent = "Tỉ Lệ Sinh Viên Đạt";
+                labels[3].textContent = "Thời Gian Làm Bài TB";
+            }
+        }
+
+        const attemptsToUse = isTeacher ? state.attempts : getStudentAttempts();
+        const total = attemptsToUse.length;
         DOM.statCompleted.textContent = total;
 
         if (total === 0) {
@@ -96,19 +109,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Average score
-        const totalScore = myAttempts.reduce((acc, curr) => acc + curr.scorePercentage, 0);
+        const totalScore = attemptsToUse.reduce((acc, curr) => acc + curr.scorePercentage, 0);
         const avg = (totalScore / total).toFixed(1);
         DOM.statAvgScore.innerHTML = `${avg}<span class="stat-sub">%</span>`;
 
         // Pass rate
-        const passes = myAttempts.filter(att => att.passed).length;
+        const passes = attemptsToUse.filter(att => att.passed).length;
         const passRate = Math.round((passes / total) * 100);
         DOM.statPassRate.innerHTML = `${passRate}<span class="stat-sub">%</span>`;
 
-        // Total time
-        const totalSecs = myAttempts.reduce((acc, curr) => acc + curr.timeSpent, 0);
-        const totalMins = Math.round(totalSecs / 60);
-        DOM.statTime.innerHTML = `${totalMins}<span class="stat-sub">phút</span>`;
+        // Total/Average time spent
+        const totalSecs = attemptsToUse.reduce((acc, curr) => acc + curr.timeSpent, 0);
+        const timeToDisplay = isTeacher ? Math.round((totalSecs / total) / 60) : Math.round(totalSecs / 60);
+        DOM.statTime.innerHTML = `${timeToDisplay}<span class="stat-sub">phút</span>`;
     }
 
     // Dynamic rendering of exam list
@@ -216,9 +229,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dynamic rendering of student attempt history
     function renderHistory() {
         DOM.historyTable.innerHTML = '';
-        const myAttempts = getStudentAttempts();
+        
+        const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
+        
+        // Dynamically adjust headers and layout for teachers
+        const historyTitle = document.querySelector('.history-section .section-title');
+        const theadRow = document.querySelector('.history-table thead tr');
+        
+        if (isTeacher) {
+            if (historyTitle) {
+                historyTitle.innerHTML = `<i class="fa-solid fa-ranking-star"></i> Danh Sách Sinh Viên Làm Bài Thi`;
+            }
+            if (DOM.clearHistoryBtn) {
+                DOM.clearHistoryBtn.style.display = 'none'; // Hide personal history clear button for teacher
+            }
+            if (theadRow) {
+                theadRow.innerHTML = `
+                    <th>STT</th>
+                    <th>Họ Tên Thí Sinh</th>
+                    <th>Đề Thi</th>
+                    <th>Ngày Làm</th>
+                    <th>Thời Gian Làm</th>
+                    <th>Điểm Số</th>
+                    <th>Đánh Giá</th>
+                    <th>Hành Động</th>
+                `;
+            }
+            const placeholderText = DOM.noHistoryPlaceholder.querySelector('p');
+            if (placeholderText) {
+                placeholderText.textContent = "Chưa có sinh viên nào tham gia thi trắc nghiệm trên hệ thống.";
+            }
+        }
 
-        if (myAttempts.length === 0) {
+        const attemptsToUse = isTeacher ? state.attempts : getStudentAttempts();
+
+        if (attemptsToUse.length === 0) {
             DOM.noHistoryPlaceholder.style.display = 'flex';
             document.querySelector('.history-table').style.display = 'none';
             return;
@@ -227,7 +272,10 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.noHistoryPlaceholder.style.display = 'none';
         document.querySelector('.history-table').style.display = 'table';
 
-        myAttempts.reverse().forEach((attempt, index) => {
+        // Copy array for display reversing
+        const renderList = [...attemptsToUse].reverse();
+
+        renderList.forEach((attempt, index) => {
             const tr = document.createElement('tr');
             
             const dateStr = new Date(attempt.takenAt).toLocaleDateString('vi-VN', {
@@ -242,22 +290,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 `<span class="badge badge-success"><i class="fas fa-check-circle"></i> Đạt</span>` : 
                 `<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Chưa Đạt</span>`;
 
-            tr.innerHTML = `
-                <td><strong>${index + 1}</strong></td>
-                <td class="history-exam-title">${attempt.examTitle}</td>
-                <td>${dateStr}</td>
-                <td>${durationStr}</td>
-                <td>
-                    <div style="font-weight: 600;">${attempt.scorePercentage}%</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">${attempt.correctCount}/${attempt.totalQuestions} câu đúng</div>
-                </td>
-                <td>${evaluationBadge}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary btn-review-result" data-id="${attempt.id}">
-                        <i class="fa-solid fa-eye"></i> Xem Lại
-                    </button>
-                </td>
-            `;
+            if (isTeacher) {
+                tr.innerHTML = `
+                    <td><strong>${index + 1}</strong></td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--text-primary);"><i class="fas fa-user-graduate"></i> &nbsp; ${attempt.username}</div>
+                    </td>
+                    <td class="history-exam-title" style="font-weight: 500;">${attempt.examTitle}</td>
+                    <td>${dateStr}</td>
+                    <td>${durationStr}</td>
+                    <td>
+                        <span class="color-primary" style="font-weight:700;">${attempt.scorePercentage}%</span>
+                        <div style="font-size: 11px; color: var(--text-muted);">${attempt.correctCount}/${attempt.totalQuestions} câu đúng</div>
+                    </td>
+                    <td>${evaluationBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary btn-review-result" data-id="${attempt.id}">
+                            <i class="fa-solid fa-eye"></i> Chi Tiết
+                        </button>
+                    </td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td><strong>${index + 1}</strong></td>
+                    <td class="history-exam-title">${attempt.examTitle}</td>
+                    <td>${dateStr}</td>
+                    <td>${durationStr}</td>
+                    <td>
+                        <div style="font-weight: 600;">${attempt.scorePercentage}%</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">${attempt.correctCount}/${attempt.totalQuestions} câu đúng</div>
+                    </td>
+                    <td>${evaluationBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary btn-review-result" data-id="${attempt.id}">
+                            <i class="fa-solid fa-eye"></i> Xem Lại
+                        </button>
+                    </td>
+                `;
+            }
 
             DOM.historyTable.appendChild(tr);
         });
