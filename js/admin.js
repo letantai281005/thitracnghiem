@@ -517,6 +517,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 6. CANDIDATES HISTORY LOG TABLES ---
     function renderGlobalAttempts() {
+        // Dynamic reload from localStorage to stay 100% synchronized
+        const localAttempts = localStorage.getItem('quizflow_attempts');
+        state.attempts = localAttempts ? JSON.parse(localAttempts) : [];
+
         DOM.attemptsTableBody.innerHTML = '';
         
         if (state.attempts.length === 0) {
@@ -528,7 +532,8 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.noAttemptsPlaceholder.style.display = 'none';
         document.querySelector('.card-global-attempts-history .history-table').style.display = 'table';
 
-        state.attempts.reverse().forEach((attempt, index) => {
+        // Use non-mutating copy to reverse and iterate safely
+        [...state.attempts].reverse().forEach((attempt, index) => {
             const tr = document.createElement('tr');
             
             const dateStr = new Date(attempt.takenAt).toLocaleDateString('vi-VN', {
@@ -540,29 +545,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const durationStr = `${Math.floor(attempt.timeSpent / 60)} phút ${attempt.timeSpent % 60} giây`;
             const evaluationBadge = attempt.passed ? 
-                `<span class="badge badge-success"><i class="fas fa-check-circle"></i> Đạt</span>` : 
-                `<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Chưa Đạt</span>`;
+                `<span class="badge badge-success" style="padding: 4px 8px; border-radius: 4px;"><i class="fas fa-check-circle"></i> Đạt</span>` : 
+                `<span class="badge badge-danger" style="padding: 4px 8px; border-radius: 4px;"><i class="fas fa-times-circle"></i> Chưa Đạt</span>`;
+
+            // Dynamic User styling & classification badges
+            const displayName = attempt.name || attempt.username;
+            const usernameDisplay = `@${attempt.username}`;
+            let classBadgeStyle = 'background: rgba(14, 165, 233, 0.15); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3);';
+            let classIcon = 'fa-graduation-cap';
+            if (attempt.studentType && attempt.studentType.toLowerCase() === 'sinh viên') {
+                classBadgeStyle = 'background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3);';
+                classIcon = 'fa-university';
+            }
+            const classificationBadge = `
+                <span class="badge" style="${classBadgeStyle} text-transform: capitalize; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;">
+                    <i class="fa-solid ${classIcon}"></i> ${attempt.studentType || 'học sinh'}
+                </span>
+            `;
+
+            // Violation / tab switches count badges
+            const cheats = attempt.cheatingCount || 0;
+            let cheatsDisplay = '';
+            if (cheats > 0) {
+                cheatsDisplay = `<span class="badge badge-danger" style="background-color: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 700; padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-triangle-exclamation"></i> ${cheats} lần</span>`;
+            } else {
+                cheatsDisplay = `<span class="badge badge-success" style="background-color: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600; padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-circle-check"></i> An toàn</span>`;
+            }
 
             tr.innerHTML = `
                 <td><strong>${index + 1}</strong></td>
                 <td>
-                    <div style="font-weight: 600;"><i class="fas fa-user-graduate"></i> &nbsp; ${attempt.username}</div>
+                    <div style="font-weight: 700; color: var(--text-primary);">${displayName} <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(${usernameDisplay})</span></div>
+                    ${classificationBadge}
                 </td>
-                <td class="history-exam-title">${attempt.examTitle}</td>
-                <td>${dateStr}</td>
+                <td class="history-exam-title" style="font-weight: 600;">${attempt.examTitle}</td>
+                <td style="color: var(--text-secondary); font-size: 12px;">${dateStr}</td>
                 <td>${durationStr}</td>
+                <td>${cheatsDisplay}</td>
                 <td>
                     <span class="color-primary" style="font-weight:600;">${attempt.correctCount}/${attempt.totalQuestions}</span>
                 </td>
-                <td><strong>${attempt.scorePercentage}%</strong></td>
+                <td><strong style="color: var(--primary); font-size: 14px;">${attempt.scorePercentage}%</strong></td>
                 <td>${evaluationBadge}</td>
             `;
 
             DOM.attemptsTableBody.appendChild(tr);
         });
-
-        // Restore array order since we reversed it for descending rendering
-        state.attempts.reverse();
     }
 
     // JSON export helper

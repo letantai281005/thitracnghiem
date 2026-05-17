@@ -361,6 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const attempt = {
             id: "attempt-" + Date.now(),
             username: currentUser.username,
+            name: currentUser.name,
+            studentType: currentUser.studentType || 'học sinh',
+            cheatingCount: tabSwitchWarnings,
             examId: exam.id,
             examTitle: exam.title,
             takenAt: new Date().toISOString(),
@@ -390,6 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (idx !== -1) {
                 candidates[idx].status = 'finished';
                 candidates[idx].score = scorePercentage;
+                candidates[idx].cheatingCount = tabSwitchWarnings;
                 localStorage.setItem('quizflow_room_candidates', JSON.stringify(candidates));
             }
             // Clean up session active room code since they finished
