@@ -161,11 +161,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (exam.subject === 'Khác') subjectIcon = 'fa-cubes';
 
             // Get attempt status
+            const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
             const myAttempts = getStudentAttempts();
             const hasAttempted = myAttempts.some(att => att.examId === exam.id);
             const statusBadge = hasAttempted 
                 ? `<span style="font-size: 11px; font-weight: 700; color: var(--success); display: inline-flex; align-items: center; gap: 4px; background-color: var(--success-light); padding: 4px 8px; border-radius: var(--radius-sm); margin-left: auto;"><i class="fa-solid fa-circle-check"></i> Đã làm</span>`
                 : `<span style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; background-color: var(--bg-secondary); padding: 4px 8px; border-radius: var(--radius-sm); margin-left: auto;"><i class="fa-regular fa-circle"></i> Chưa làm</span>`;
+
+            const btnText = isTeacher ? 'Tạo Phòng Thi' : 'Bắt Đầu Làm Bài';
+            const btnIcon = isTeacher ? 'fa-circle-plus' : 'fa-play';
+            const btnGradientStyle = isTeacher ? 'background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);' : '';
 
             card.innerHTML = `
                 <div class="exam-card-header" style="display: flex; align-items: center; width: 100%;">
@@ -181,8 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="meta-item"><i class="fa-solid fa-clock"></i> ${exam.duration} phút</span>
                     <span class="meta-item"><i class="fa-solid fa-circle-question"></i> ${exam.questions.length} câu hỏi</span>
                 </div>
-                <button class="btn btn-primary btn-full btn-start-exam" data-id="${exam.id}">
-                    Bắt Đầu Làm Bài &nbsp;<i class="fa-solid fa-play"></i>
+                <button class="btn btn-primary btn-full btn-start-exam" data-id="${exam.id}" style="${btnGradientStyle}">
+                    ${btnText} &nbsp;<i class="fa-solid ${btnIcon}"></i>
                 </button>
             `;
 
@@ -195,6 +200,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 const id = btn.getAttribute('data-id');
                 const selected = state.exams.find(e => e.id === id);
                 if (selected) {
+                    const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
+                    if (isTeacher) {
+                        // Teacher action: Auto-select this exam in room generator and scroll up beautifully
+                        const selectRoom = document.getElementById('select-exam-room');
+                        if (selectRoom) {
+                            selectRoom.value = id;
+                            const codeCard = document.querySelector('.code-entry-card');
+                            if (codeCard) {
+                                codeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                codeCard.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                                codeCard.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.4)';
+                                codeCard.style.borderColor = '#10b981';
+                                setTimeout(() => {
+                                    codeCard.style.boxShadow = 'var(--shadow-sm)';
+                                    codeCard.style.borderColor = 'var(--border-color)';
+                                }, 2500);
+                            }
+                            showToast(`Đã chọn đề: "${selected.title}" để tạo mã phòng!`, "success");
+                        } else {
+                            showToast("Không tìm thấy bộ tạo mã phòng!", "error");
+                        }
+                        return;
+                    }
+
+                    // Student action
                     if (selected.questions.length === 0) {
                         showToast("Đề thi này chưa có câu hỏi nào! Vui lòng chọn đề khác.", "error");
                         return;

@@ -15,14 +15,13 @@ const Students = {
             createdAt: new Date().toISOString()
         },
         {
-            username: "student",
+            username: "teacher",
             password: "123",
-            name: "Nguyễn Văn Học",
-            role: "student",
-            studentType: "sinh viên",
-            avatar: "user-graduate",
+            name: "Giáo Viên",
+            role: "teacher",
+            avatar: "user-teacher",
             createdAt: new Date().toISOString()
-        }
+        },
     ],
 
     // Retrieve all registered accounts from local storage
