@@ -314,8 +314,22 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.modalConfirm.classList.remove('active');
     }
 
-    DOM.submitBtn.addEventListener('click', openConfirmModal);
-    DOM.emergencySubmitBtn.addEventListener('click', openConfirmModal);
+    // Check and decide whether to prompt warning modal or submit instantly
+    function handleBeforeSubmitClick() {
+        const answeredCount = state.userAnswers.filter(a => a !== null).length;
+        const unansweredCount = exam.questions.length - answeredCount;
+
+        if (unansweredCount > 0) {
+            // Remind about unanswered questions
+            openConfirmModal();
+        } else {
+            // Immediately end exam and show score
+            submitExam(false);
+        }
+    }
+
+    DOM.submitBtn.addEventListener('click', handleBeforeSubmitClick);
+    DOM.emergencySubmitBtn.addEventListener('click', handleBeforeSubmitClick);
     DOM.modalCancel.addEventListener('click', closeConfirmModal);
     
     DOM.modalSubmit.addEventListener('click', () => {
@@ -377,17 +391,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Bypass beforeunload warning securely
         window.isSubmittingBypass = true;
 
-        // 7. Route redirect
+        // 7. Route redirect (Instantaneous redirection)
         if (currentUser.role === 'admin' || currentUser.role === 'teacher') {
-            showToast("Đã ghi nhận bài thi! Đang chuyển hướng về Bảng điểm quản trị...", "success");
-            setTimeout(() => {
-                window.location.href = 'admin.html';
-            }, 1200);
+            window.location.href = 'admin.html';
         } else {
-            showToast("Nộp bài thi thành công! Đang lập bảng điểm...", "success");
-            setTimeout(() => {
-                window.location.href = 'result.html';
-            }, 1200);
+            window.location.href = 'result.html';
         }
     }
 
