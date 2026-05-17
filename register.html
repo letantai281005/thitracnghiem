@@ -291,6 +291,45 @@
             color: var(--secondary);
             text-decoration: underline;
         }
+
+        /* Premium Segmented Role Selector CSS */
+        .role-selector-container {
+            display: flex;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 4px;
+            border: 1px solid var(--border);
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 9px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .role-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.02);
+            color: #fff;
+        }
+
+        .role-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            box-shadow: 0 4px 10px var(--primary-glow);
+        }
     </style>
 </head>
 <body>
@@ -339,6 +378,19 @@
                     </div>
                 </div>
 
+                <!-- Segmented Role Selector -->
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label">Bạn đăng ký tài khoản với tư cách:</label>
+                    <div class="role-selector-container">
+                        <button type="button" class="role-btn active" data-role="student">
+                            <i class="fa-solid fa-user-graduate"></i> Học sinh / Sinh viên
+                        </button>
+                        <button type="button" class="role-btn" data-role="teacher">
+                            <i class="fa-solid fa-chalkboard-user"></i> Giáo viên / Giảng viên
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Avatar selector -->
                 <div class="form-group" style="margin-bottom: 10px;">
                     <label class="avatar-picker-label">Chọn hình ảnh đại diện</label>
@@ -379,6 +431,17 @@
 
     <script>
         let selectedAvatar = "user-graduate";
+        let selectedRole = "student";
+
+        // Segmented role control selection logic
+        const roleBtns = document.querySelectorAll('.role-btn');
+        roleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                roleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedRole = btn.getAttribute('data-role');
+            });
+        });
 
         // Grid selection logic
         const avatarOpts = document.querySelectorAll('.avatar-option');
@@ -401,7 +464,7 @@
             const icon = document.getElementById('banner-icon');
             const text = document.getElementById('banner-text');
 
-            const res = Students.register(username, password, fullname, selectedAvatar);
+            const res = Students.register(username, password, fullname, selectedAvatar, selectedRole);
 
             if (res.success) {
                 // Success message

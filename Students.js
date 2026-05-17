@@ -58,8 +58,8 @@ const Students = {
         return { success: false, message: "Tên đăng nhập hoặc mật khẩu không chính xác." };
     },
 
-    // Register a new student account
-    register: function(username, password, name, avatar = "user-graduate") {
+    // Register a new account (student or teacher)
+    register: function(username, password, name, avatar = "user-graduate", role = "student") {
         if (!username || !password || !name) {
             return { success: false, message: "Vui lòng điền đầy đủ tất cả thông tin." };
         }
@@ -75,7 +75,7 @@ const Students = {
             username: username.trim(),
             password: password,
             name: name.trim(),
-            role: "student", // All new registrations are standard students
+            role: role, // Dynamically assign selected role (student or teacher)
             avatar: avatar,
             blocked: false,
             createdAt: new Date().toISOString()
