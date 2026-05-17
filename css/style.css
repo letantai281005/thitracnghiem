@@ -203,16 +203,13 @@ p {
 }
 
 .logo-icon {
-    width: 42px;
-    height: 42px;
-    background: var(--primary-gradient);
-    border-radius: var(--radius-md);
+    width: 44px;
+    height: 44px;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
-    font-size: 20px;
-    box-shadow: 0 8px 16px -4px rgba(79, 70, 229, 0.4);
+    box-shadow: none;
 }
 
 .logo-text {
@@ -221,22 +218,29 @@ p {
 }
 
 .logo-main {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 800;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -0.5px;
+    font-family: 'Playfair Display', 'Georgia', serif;
+    color: #2b5c8f;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+[data-theme="dark"] .logo-main {
+    color: #93c5fd;
 }
 
 .logo-sub {
-    font-size: 11px;
-    color: var(--text-tertiary);
-    font-weight: 600;
+    font-size: 9px;
+    color: #c27f38;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: -2px;
+    letter-spacing: 2px;
+    margin-top: 1px;
+}
+
+[data-theme="dark"] .logo-sub {
+    color: #fdba74;
 }
 
 /* NAVIGATION TABS */
