@@ -330,13 +330,12 @@
                 Chưa có tài khoản? <a href="register.html" class="login-link">Đăng ký ngay</a>
             </div>
 
-            <!-- Demo helper badges -->
-            <div class="quick-accounts">
-                <p style="margin-bottom: 6px;"><i class="fas fa-info-circle"></i> Tài khoản thử nghiệm (Mật khẩu:
-                    <b>123</b>):
-                </p>
-                <div class="account-badge" onclick="fillCreds('student')">student (Học sinh)</div>
-                <div class="account-badge" onclick="fillCreds('admin')">admin (Quản trị)</div>
+            <!-- Saved Accounts / Demo helper badges -->
+            <div class="quick-accounts" style="margin-top: 24px;">
+                <p style="margin-bottom: 8px; font-weight: 600; color: var(--text-secondary); font-size: 13px;"><i class="fas fa-info-circle"></i> Tài khoản đã lưu (Click đăng nhập nhanh):</p>
+                <div id="quick-accounts-list" style="display: flex; flex-wrap: wrap; gap: 8px; max-height: 120px; overflow-y: auto; padding-right: 4px;">
+                    <!-- Clickable account badges will be dynamically rendered here -->
+                </div>
             </div>
 
         </div>
@@ -347,11 +346,46 @@
     <script src="js/auth.js"></script>
 
     <script>
-        // Fill credentials instantly on clicking demo badges
-        function fillCreds(type) {
-            document.getElementById('username').value = type;
-            document.getElementById('password').value = '123';
+        // Render saved accounts dynamically
+        function renderQuickAccounts() {
+            const container = document.getElementById('quick-accounts-list');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const users = Students.getAll();
+            users.forEach(u => {
+                const badge = document.createElement('div');
+                badge.className = 'account-badge';
+                badge.style.display = 'inline-flex';
+                badge.style.alignItems = 'center';
+                badge.style.gap = '6px';
+                
+                let roleLabel = 'Thí sinh';
+                let iconClass = 'fa-user-graduate';
+                if (u.role === 'admin') {
+                    roleLabel = 'Quản trị';
+                    iconClass = 'fa-user-shield';
+                } else if (u.role === 'teacher') {
+                    roleLabel = 'Giáo viên';
+                    iconClass = 'fa-chalkboard-user';
+                }
+                
+                badge.innerHTML = `<i class="fa-solid ${iconClass}"></i> <strong>${u.username}</strong> (${roleLabel})`;
+                badge.style.cursor = 'pointer';
+                badge.style.fontSize = '12px';
+                badge.style.padding = '6px 12px';
+                badge.style.borderRadius = 'var(--radius-sm)';
+                badge.style.transition = 'all 0.2s';
+                
+                badge.addEventListener('click', () => {
+                    document.getElementById('username').value = u.username;
+                    document.getElementById('password').value = u.password;
+                });
+                container.appendChild(badge);
+            });
         }
+
+        renderQuickAccounts();
 
         // Form Submission Logic
         document.getElementById('login-form').addEventListener('submit', (e) => {
