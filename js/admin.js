@@ -20,7 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
         state.exams = DEFAULT_EXAMS;
         localStorage.setItem('quizflow_exams', JSON.stringify(DEFAULT_EXAMS));
     } else {
-        state.exams = JSON.parse(localExams);
+        const parsed = JSON.parse(localExams);
+        if (parsed.length < DEFAULT_EXAMS.length) {
+            const customExams = parsed.filter(ex => !ex.id.startsWith('exam-'));
+            state.exams = [...DEFAULT_EXAMS, ...customExams];
+            localStorage.setItem('quizflow_exams', JSON.stringify(state.exams));
+        } else {
+            state.exams = parsed;
+        }
     }
 
     // Load attempts history
