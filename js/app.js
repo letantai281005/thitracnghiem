@@ -8,10 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentUser = Students.getCurrentUser();
     if (!currentUser) return; // Route guard will handle redirect
 
-    // Display admin navigation link if role permits (admin and teacher)
-    if (currentUser.role === 'admin' || currentUser.role === 'teacher') {
+    // Display admin/teacher navigation links if role permits
+    const isTeacherRole = currentUser.role === 'admin' || currentUser.role === 'teacher';
+    if (isTeacherRole) {
         const adminBtn = document.getElementById('nav-admin');
-        if (adminBtn) adminBtn.style.display = 'inline-block';
+        if (adminBtn) {
+            adminBtn.style.display = 'inline-block';
+            adminBtn.addEventListener('click', () => {
+                window.location.href = 'trangcon/admin.html';
+            });
+        }
+        const teacherHistoryBtn = document.getElementById('nav-teacher-history');
+        if (teacherHistoryBtn) {
+            teacherHistoryBtn.style.display = 'inline-block';
+        }
     }
 
     // Load active settings in forms
@@ -1191,9 +1201,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- 9. VIEW SWITCHING FOR TEACHERS ---
+    function initViewSwitcher() {
+        const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
+        if (!isTeacher) return;
+
+        const navDashboard = document.getElementById('nav-dashboard');
+        const navTeacherHistory = document.getElementById('nav-teacher-history');
+
+        const hero = document.querySelector('.dashboard-hero');
+        const stats = document.querySelector('.stats-grid');
+        const codeCard = document.querySelector('.code-entry-card');
+        const filterBar = document.querySelector('.filter-bar');
+        const examTitleRow = document.querySelector('.exam-grid-title-row');
+        const examContainer = document.getElementById('exam-list-container');
+        const historySection = document.querySelector('.history-section');
+
+        // Initially hide history section for teachers on dashboard view
+        if (historySection) {
+            historySection.style.display = 'none';
+        }
+
+        if (navDashboard && navTeacherHistory) {
+            navDashboard.addEventListener('click', () => {
+                navDashboard.classList.add('active');
+                navTeacherHistory.classList.remove('active');
+
+                // Show dashboard elements
+                if (hero) hero.style.display = 'block';
+                if (stats) stats.style.display = 'grid';
+                if (codeCard) codeCard.style.display = 'flex';
+                if (filterBar) filterBar.style.display = 'flex';
+                if (examTitleRow) examTitleRow.style.display = 'flex';
+                if (examContainer) examContainer.style.display = 'grid';
+
+                // Hide history section
+                if (historySection) historySection.style.display = 'none';
+            });
+
+            navTeacherHistory.addEventListener('click', () => {
+                navTeacherHistory.classList.add('active');
+                navDashboard.classList.remove('active');
+
+                // Hide dashboard elements
+                if (hero) hero.style.display = 'none';
+                if (stats) stats.style.display = 'none';
+                if (codeCard) codeCard.style.display = 'none';
+                if (filterBar) filterBar.style.display = 'none';
+                if (examTitleRow) examTitleRow.style.display = 'none';
+                if (examContainer) examContainer.style.display = 'none';
+
+                // Show history section exclusively
+                if (historySection) {
+                    historySection.style.display = 'block';
+                    historySection.style.animation = 'fadeIn 0.4s ease-out';
+                }
+            });
+        }
+    }
+
     // --- 8. PAGE INITS ---
     updateGreeting();
     renderStats();
     renderExams();
     renderHistory();
+    initViewSwitcher();
 });
