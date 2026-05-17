@@ -1854,11 +1854,12 @@ const DEFAULT_EXAMS = [
 
         // Build question set from the master pool
         const pool = pools[subject];
-        const qCount = Math.min(5, pool.length);
+        // Generate between 15 and 20 questions
+        const qCount = Math.floor(Math.random() * 6) + 15; // 15-20 questions
         const questions = [];
 
         for (let qIdx = 0; qIdx < qCount; qIdx++) {
-            // Select questions with offsets to create unique sets per exam
+            // Select questions with offsets to create unique sets per exam, using modulo to repeat safely
             const sourceIdx = (qIdx + i) % pool.length;
             const originalQ = pool[sourceIdx];
             questions.push({
@@ -1870,15 +1871,20 @@ const DEFAULT_EXAMS = [
             });
         }
 
+        const isReview = i < 20; // The first 20 exams belong to the "Review" category
+        const titlePrefix = isReview ? "Ôn tập" : "Đề thi";
+        const examTitle = `${titlePrefix}: ${item.topic}`;
+
         DEFAULT_EXAMS.push({
             id: examId,
-            title: `Đề ôn tập: ${item.topic}`,
+            title: examTitle,
             subject: subject,
             duration: duration,
             passScore: passScore,
             difficulty: difficulty,
             examCode: examCode,
-            description: `Hệ thống đề ôn thi trắc nghiệm chuẩn hóa hỗ trợ học tập củng cố kiến thức chuyên sâu chủ đề: ${item.topic}.`,
+            description: `Hệ thống đề thi trắc nghiệm chuẩn hóa bậc Đại học giúp sinh viên ${isReview ? "ôn tập và củng cố kiến thức" : "kiểm tra kết quả học tập"} chuyên sâu môn: ${item.topic}.`,
+            isReview: isReview,
             questions: questions
         });
     }

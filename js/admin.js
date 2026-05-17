@@ -14,14 +14,20 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedExamId: null
     };
 
-    // Load exams library
+    // Load exams library with smart auto-update/self-healing sync
     const localExams = localStorage.getItem('quizflow_exams');
     if (!localExams) {
         state.exams = DEFAULT_EXAMS;
         localStorage.setItem('quizflow_exams', JSON.stringify(DEFAULT_EXAMS));
     } else {
         const parsed = JSON.parse(localExams);
-        if (parsed.length < DEFAULT_EXAMS.length) {
+        // Self-Healing: Check if any default exam has outdated question count or missing isReview flag
+        const hasOutdatedDefaultExams = parsed.some(ex => {
+            const defaultEx = DEFAULT_EXAMS.find(d => d.id === ex.id);
+            return defaultEx && (defaultEx.questions.length !== ex.questions.length || defaultEx.isReview !== ex.isReview);
+        });
+
+        if (parsed.length < DEFAULT_EXAMS.length || hasOutdatedDefaultExams) {
             const customExams = parsed.filter(ex => !ex.id.startsWith('exam-'));
             state.exams = [...DEFAULT_EXAMS, ...customExams];
             localStorage.setItem('quizflow_exams', JSON.stringify(state.exams));

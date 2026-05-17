@@ -22,6 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (teacherHistoryBtn) {
             teacherHistoryBtn.style.display = 'inline-block';
         }
+    } else {
+        // Hide exam list section for students (they must enter exam room by code instead)
+        const filterBar = document.querySelector('.filter-bar');
+        const gridTitle = document.querySelector('.exam-grid-title-row');
+        const gridContainer = document.getElementById('exam-list-container');
+        
+        if (filterBar) filterBar.style.display = 'none';
+        if (gridTitle) gridTitle.style.display = 'none';
+        if (gridContainer) gridContainer.style.display = 'none';
     }
 
     // Load active settings in forms
@@ -31,18 +40,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let state = {
         exams: [],
         attempts: [],
-        activeSubject: 'all',
+        activeSubject: 'Tin học',
+        activeDifficulty: 'all',
         searchQuery: ''
     };
 
-    // Load exams library
+    // Load exams library with smart auto-update/self-healing sync
     const localExams = localStorage.getItem('quizflow_exams');
     if (!localExams) {
         state.exams = DEFAULT_EXAMS;
         localStorage.setItem('quizflow_exams', JSON.stringify(DEFAULT_EXAMS));
     } else {
         const parsed = JSON.parse(localExams);
-        if (parsed.length < DEFAULT_EXAMS.length) {
+        // Self-Healing: Check if any default exam has outdated question count or missing isReview flag
+        const hasOutdatedDefaultExams = parsed.some(ex => {
+            const defaultEx = DEFAULT_EXAMS.find(d => d.id === ex.id);
+            return defaultEx && (defaultEx.questions.length !== ex.questions.length || defaultEx.isReview !== ex.isReview);
+        });
+
+        if (parsed.length < DEFAULT_EXAMS.length || hasOutdatedDefaultExams) {
             const customExams = parsed.filter(ex => !ex.id.startsWith('exam-'));
             state.exams = [...DEFAULT_EXAMS, ...customExams];
             localStorage.setItem('quizflow_exams', JSON.stringify(state.exams));
@@ -69,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statTime: document.getElementById('stat-total-time'),
         tabs: document.querySelectorAll('.tab-btn'),
         searchInput: document.getElementById('search-exam-input'),
+        difficultyFilter: document.getElementById('difficulty-filter'),
         examBadge: document.getElementById('exam-count-badge'),
         badge: document.getElementById('exam-count-badge'), // Safe-guard duplicate selector
         examContainer: document.getElementById('exam-list-container'),
@@ -76,6 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
         noHistoryPlaceholder: document.getElementById('no-history-placeholder'),
         clearHistoryBtn: document.getElementById('clear-history-btn'),
         themeToggle: document.getElementById('theme-toggle'),
+        navClassroom: document.getElementById('nav-classroom'),
+        classroomView: document.getElementById('classroom-view'),
         
         // Profile Modal
         profileTrigger: document.getElementById('profile-widget-trigger'),
@@ -146,10 +165,18 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.examContainer.innerHTML = '';
         
         const filtered = state.exams.filter(exam => {
-            const matchesSubject = state.activeSubject === 'all' || exam.subject === state.activeSubject;
+            let matchesSubject = false;
+            if (state.activeSubject === 'Ôn tập') {
+                matchesSubject = !!exam.isReview;
+            } else {
+                matchesSubject = !exam.isReview && (state.activeSubject === 'all' || exam.subject === state.activeSubject);
+            }
+            
+            const matchesDifficulty = state.activeDifficulty === 'all' || exam.difficulty === state.activeDifficulty;
+            
             const matchesSearch = exam.title.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
                                   exam.description.toLowerCase().includes(state.searchQuery.toLowerCase());
-            return matchesSubject && matchesSearch;
+            return matchesSubject && matchesDifficulty && matchesSearch;
         });
 
         DOM.badge.textContent = `${filtered.length} đề thi`;
@@ -173,9 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (exam.difficulty === 'Khó') difficultyClass = 'diff-hard';
 
             let subjectIcon = 'fa-laptop';
-            if (exam.subject === 'Tiếng Anh') subjectIcon = 'fa-language';
-            if (exam.subject === 'Lịch sử') subjectIcon = 'fa-landmark';
-            if (exam.subject === 'Khác') subjectIcon = 'fa-cubes';
+            if (exam.isReview) subjectIcon = 'fa-book-open';
+            else if (exam.subject === 'Tiếng Anh') subjectIcon = 'fa-language';
+            else if (exam.subject === 'Lịch sử') subjectIcon = 'fa-landmark';
+            else if (exam.subject === 'Khác') subjectIcon = 'fa-cubes';
 
             // Get attempt status
             const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
@@ -189,10 +217,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnIcon = isTeacher ? 'fa-circle-plus' : 'fa-play';
             const btnGradientStyle = isTeacher ? 'background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);' : '';
 
+            const subjectLabel = exam.isReview ? `Ôn tập • ${exam.subject}` : exam.subject;
+
             card.innerHTML = `
                 <div class="exam-card-header" style="display: flex; align-items: center; width: 100%;">
                     <span class="exam-card-subject">
-                        <i class="fa-solid ${subjectIcon}"></i> ${exam.subject}
+                        <i class="fa-solid ${subjectIcon}"></i> ${subjectLabel}
                     </span>
                     <span class="exam-card-difficulty ${difficultyClass}" style="margin-left: 8px;">${exam.difficulty}</span>
                     ${statusBadge}
@@ -475,6 +505,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (DOM.searchInput) {
         DOM.searchInput.addEventListener('input', (e) => {
             state.searchQuery = e.target.value;
+            renderExams();
+        });
+    }
+
+    // Difficulty filter dropdown
+    if (DOM.difficultyFilter) {
+        DOM.difficultyFilter.addEventListener('change', (e) => {
+            state.activeDifficulty = e.target.value;
             renderExams();
         });
     }
@@ -1208,12 +1246,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 9. VIEW SWITCHING FOR TEACHERS ---
+    // --- 9. VIEW SWITCHING AND CLASSROOM CONTROLLERS ---
     function initViewSwitcher() {
         const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
-        if (!isTeacher) return;
 
         const navDashboard = document.getElementById('nav-dashboard');
+        const navClassroom = document.getElementById('nav-classroom');
         const navTeacherHistory = document.getElementById('nav-teacher-history');
 
         const hero = document.querySelector('.dashboard-hero');
@@ -1223,48 +1261,921 @@ document.addEventListener('DOMContentLoaded', () => {
         const examTitleRow = document.querySelector('.exam-grid-title-row');
         const examContainer = document.getElementById('exam-list-container');
         const historySection = document.querySelector('.history-section');
+        const classroomView = document.getElementById('classroom-view');
 
-        // Initially hide history section for teachers on dashboard view
-        if (historySection) {
-            historySection.style.display = 'none';
+        // Helper to hide all views
+        function hideAllViews() {
+            // Remove active classes
+            if (navDashboard) navDashboard.classList.remove('active');
+            if (navClassroom) navClassroom.classList.remove('active');
+            if (navTeacherHistory) navTeacherHistory.classList.remove('active');
+
+            // Hide sections
+            if (hero) hero.style.display = 'none';
+            if (stats) stats.style.display = 'none';
+            if (codeCard) codeCard.style.display = 'none';
+            if (filterBar) filterBar.style.display = 'none';
+            if (examTitleRow) examTitleRow.style.display = 'none';
+            if (examContainer) examContainer.style.display = 'none';
+            if (historySection) historySection.style.display = 'none';
+            if (classroomView) {
+                classroomView.style.display = 'none';
+                classroomView.classList.remove('active');
+            }
         }
 
-        if (navDashboard && navTeacherHistory) {
+        if (navDashboard) {
             navDashboard.addEventListener('click', () => {
+                hideAllViews();
                 navDashboard.classList.add('active');
-                navTeacherHistory.classList.remove('active');
 
                 // Show dashboard elements
                 if (hero) hero.style.display = 'block';
                 if (stats) stats.style.display = 'grid';
-                if (codeCard) codeCard.style.display = 'flex';
-                if (filterBar) filterBar.style.display = 'flex';
-                if (examTitleRow) examTitleRow.style.display = 'flex';
-                if (examContainer) examContainer.style.display = 'grid';
-
-                // Hide history section
-                if (historySection) historySection.style.display = 'none';
+                
+                // Only show these based on roles
+                if (isTeacher) {
+                    if (codeCard) codeCard.style.display = 'flex';
+                    if (filterBar) filterBar.style.display = 'flex';
+                    if (examTitleRow) examTitleRow.style.display = 'flex';
+                    if (examContainer) examContainer.style.display = 'grid';
+                } else {
+                    // For student, hide exam lists but show codeCard and history
+                    if (codeCard) codeCard.style.display = 'flex';
+                    if (historySection) historySection.style.display = 'block';
+                }
             });
+        }
 
+        if (navClassroom) {
+            navClassroom.addEventListener('click', () => {
+                hideAllViews();
+                navClassroom.classList.add('active');
+
+                if (classroomView) {
+                    classroomView.style.display = 'block';
+                    classroomView.classList.add('active');
+                    classroomView.style.animation = 'fadeIn 0.4s ease-out';
+                }
+                renderClassrooms();
+            });
+        }
+
+        if (navTeacherHistory && isTeacher) {
             navTeacherHistory.addEventListener('click', () => {
+                hideAllViews();
                 navTeacherHistory.classList.add('active');
-                navDashboard.classList.remove('active');
 
-                // Hide dashboard elements
-                if (hero) hero.style.display = 'none';
-                if (stats) stats.style.display = 'none';
-                if (codeCard) codeCard.style.display = 'none';
-                if (filterBar) filterBar.style.display = 'none';
-                if (examTitleRow) examTitleRow.style.display = 'none';
-                if (examContainer) examContainer.style.display = 'none';
-
-                // Show history section exclusively
                 if (historySection) {
                     historySection.style.display = 'block';
                     historySection.style.animation = 'fadeIn 0.4s ease-out';
                 }
             });
         }
+        
+        // Initial setup based on role
+        if (!isTeacher) {
+            // For students, show history list by default on dashboard
+            if (historySection) historySection.style.display = 'block';
+        } else {
+            // For teachers, hide history list by default on dashboard
+            if (historySection) historySection.style.display = 'none';
+        }
+    }
+
+    // --- 10. CLASSROOM CORE SERVICES ---
+    function generateClassroomCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const classrooms = JSON.parse(localStorage.getItem('quizflow_classrooms') || '[]');
+        let code = '';
+        let isUnique = false;
+        
+        while (!isUnique) {
+            code = '';
+            for (let i = 0; i < 8; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            // Check uniqueness
+            isUnique = !classrooms.some(c => c.code === code);
+        }
+        return code;
+    }
+
+    function renderClassrooms() {
+        const classrooms = JSON.parse(localStorage.getItem('quizflow_classrooms') || '[]');
+        const isAdmin = currentUser.role === 'admin';
+        const isTeacher = currentUser.role === 'teacher';
+        
+        const listCard = document.getElementById('classroom-list-card');
+        
+        if (!isAdmin) {
+            // Hide the classroom library list from non-admin users
+            if (listCard) listCard.style.display = 'none';
+            
+            // UX Auto-select the last active classroom for Teachers and Students
+            if (isTeacher) {
+                const myClasses = classrooms.filter(c => c.teacherUsername.toLowerCase() === currentUser.username.toLowerCase());
+                if (myClasses.length > 0 && !selectedClassroomId) {
+                    // Sort to show the newest created class first
+                    myClasses.sort((a, b) => b.createdAt - a.createdAt);
+                    selectClassroom(myClasses[0].id);
+                }
+            } else {
+                const myClasses = classrooms.filter(c => c.members.some(m => m.username.toLowerCase() === currentUser.username.toLowerCase()));
+                if (myClasses.length > 0 && !selectedClassroomId) {
+                    selectClassroom(myClasses[0].id);
+                }
+            }
+            return;
+        }
+        
+        // For Admin: Display all classrooms in the system
+        if (listCard) listCard.style.display = 'block';
+        
+        const countBadge = document.getElementById('classroom-count-badge');
+        if (countBadge) countBadge.textContent = `${classrooms.length} lớp`;
+        
+        const container = document.getElementById('classroom-list-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (classrooms.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px;">
+                    <i class="fa-solid fa-folder-open" style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;"></i>
+                    <p>Hệ thống chưa có lớp học nào.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        classrooms.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'classroom-card-item';
+            div.style.cssText = 'padding: 14px 18px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 4px;';
+            
+            if (selectedClassroomId === c.id) {
+                div.style.background = 'rgba(79, 70, 229, 0.05)';
+                div.style.borderColor = 'var(--primary)';
+            }
+            
+            // Hover effect
+            div.addEventListener('mouseenter', () => {
+                div.style.borderColor = 'var(--primary)';
+                div.style.transform = 'translateX(4px)';
+            });
+            div.addEventListener('mouseleave', () => {
+                if (selectedClassroomId !== c.id) {
+                    div.style.borderColor = 'var(--border-color)';
+                }
+                div.style.transform = 'none';
+            });
+            
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="color: var(--text-primary); font-size: 14px;">${c.name}</strong>
+                    <span style="font-size: 11px; font-family: monospace; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; font-weight: 700;">${c.code}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                    <span><i class="fa-solid fa-chalkboard-user"></i> GV: ${c.teacherName}</span>
+                    <span><i class="fa-solid fa-users"></i> ${c.members.length} học viên</span>
+                </div>
+            `;
+            
+            div.addEventListener('click', () => {
+                // Remove active styling from other cards
+                document.querySelectorAll('.classroom-card-item').forEach(item => {
+                    item.style.background = 'var(--bg-primary)';
+                    item.style.borderColor = 'var(--border-color)';
+                });
+                div.style.background = 'rgba(79, 70, 229, 0.05)';
+                div.style.borderColor = 'var(--primary)';
+                selectClassroom(c.id);
+            });
+            
+            container.appendChild(div);
+        });
+    }
+
+    let selectedClassroomId = null;
+    
+    function selectClassroom(classId) {
+        const classrooms = JSON.parse(localStorage.getItem('quizflow_classrooms') || '[]');
+        const classroom = classrooms.find(c => c.id === classId);
+        if (!classroom) return;
+        
+        selectedClassroomId = classId;
+        
+        const placeholder = document.getElementById('classroom-details-placeholder');
+        const content = document.getElementById('classroom-details-content');
+        
+        if (placeholder) placeholder.style.display = 'none';
+        if (content) content.style.display = 'flex';
+        
+        document.getElementById('classroom-active-name').textContent = classroom.name;
+        document.getElementById('classroom-active-teacher').textContent = classroom.teacherName;
+        document.getElementById('classroom-active-code').textContent = classroom.code;
+        document.getElementById('classroom-active-members').textContent = classroom.members.length;
+        
+        // Reset subtabs to members by default
+        const btnTabMembers = document.getElementById('btn-classroom-tab-members');
+        const btnTabAssigns = document.getElementById('btn-classroom-tab-assignments');
+        const panelMembers = document.getElementById('panel-classroom-members');
+        const panelAssigns = document.getElementById('panel-classroom-assignments');
+        
+        if (btnTabMembers && btnTabAssigns && panelMembers && panelAssigns) {
+            // Activate members tab
+            btnTabMembers.classList.add('active');
+            btnTabMembers.style.borderBottom = '3px solid var(--primary)';
+            btnTabMembers.style.color = 'var(--primary)';
+            btnTabMembers.style.fontWeight = '700';
+            
+            btnTabAssigns.classList.remove('active');
+            btnTabAssigns.style.borderBottom = '3px solid transparent';
+            btnTabAssigns.style.color = 'var(--text-secondary)';
+            btnTabAssigns.style.fontWeight = '600';
+            
+            panelMembers.style.display = 'flex';
+            panelAssigns.style.display = 'none';
+            
+            // Subtab event wire-up
+            btnTabMembers.onclick = () => {
+                btnTabMembers.classList.add('active');
+                btnTabMembers.style.borderBottom = '3px solid var(--primary)';
+                btnTabMembers.style.color = 'var(--primary)';
+                btnTabMembers.style.fontWeight = '700';
+                
+                btnTabAssigns.classList.remove('active');
+                btnTabAssigns.style.borderBottom = '3px solid transparent';
+                btnTabAssigns.style.color = 'var(--text-secondary)';
+                btnTabAssigns.style.fontWeight = '600';
+                
+                panelMembers.style.display = 'flex';
+                panelAssigns.style.display = 'none';
+            };
+            
+            btnTabAssigns.onclick = () => {
+                btnTabAssigns.classList.add('active');
+                btnTabAssigns.style.borderBottom = '3px solid var(--primary)';
+                btnTabAssigns.style.color = 'var(--primary)';
+                btnTabAssigns.style.fontWeight = '700';
+                
+                btnTabMembers.classList.remove('active');
+                btnTabMembers.style.borderBottom = '3px solid transparent';
+                btnTabMembers.style.color = 'var(--text-secondary)';
+                btnTabMembers.style.fontWeight = '600';
+                
+                panelAssigns.style.display = 'flex';
+                panelMembers.style.display = 'none';
+                
+                // Load assignment features
+                setupAssignmentPanel(classroom);
+            };
+        }
+        
+        const copyBtn = document.getElementById('btn-copy-classroom-code');
+        if (copyBtn) {
+            // Re-bind click event to copy
+            const newCopyBtn = copyBtn.cloneNode(true);
+            copyBtn.parentNode.replaceChild(newCopyBtn, copyBtn);
+            newCopyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(classroom.code).then(() => {
+                    newCopyBtn.innerHTML = `<i class="fa-solid fa-check" style="color: #10b981;"></i>`;
+                    showToast("Đã sao chép mã lớp học!", "success");
+                    setTimeout(() => {
+                        newCopyBtn.innerHTML = `<i class="fa-regular fa-copy"></i>`;
+                    }, 2000);
+                });
+            });
+        }
+        
+        const tableBody = document.getElementById('classroom-members-table-body');
+        const noMembersState = document.getElementById('classroom-no-members-state');
+        
+        if (tableBody) {
+            tableBody.innerHTML = '';
+            
+            if (classroom.members.length === 0) {
+                if (noMembersState) noMembersState.style.display = 'block';
+            } else {
+                if (noMembersState) noMembersState.style.display = 'none';
+                
+                classroom.members.forEach((m, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.style.cssText = 'border-bottom: 1px solid var(--border-color);';
+                    
+                    const dateStr = new Date(m.joinedAt).toLocaleDateString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit'
+                    });
+                    
+                    let typeBadgeStyle = 'background: rgba(14, 165, 233, 0.15); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3);';
+                    let icon = 'fa-graduation-cap';
+                    if (m.studentType && m.studentType.toLowerCase() === 'sinh viên') {
+                        typeBadgeStyle = 'background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3);';
+                        icon = 'fa-university';
+                    }
+                    
+                    tr.innerHTML = `
+                        <td style="padding: 12px 10px; font-weight: 700;">${idx + 1}</td>
+                        <td style="padding: 12px 10px; font-weight: 700; color: var(--text-primary);">${m.name}</td>
+                        <td style="padding: 12px 10px; color: var(--text-secondary);">@${m.username}</td>
+                        <td style="padding: 12px 10px;">
+                            <span class="badge" style="${typeBadgeStyle} text-transform: capitalize; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid ${icon}"></i> ${m.studentType || 'học sinh'}
+                            </span>
+                        </td>
+                        <td style="padding: 12px 10px; color: var(--text-secondary); font-size: 12px;">${dateStr}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+        }
+    }
+
+    function setupAssignmentPanel(classroom) {
+        const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
+        const assignBox = document.getElementById('classroom-teacher-assign-box');
+        
+        if (isTeacher) {
+            if (assignBox) {
+                assignBox.style.display = 'flex';
+                
+                // Populate dropdown with exams
+                const selectExam = document.getElementById('select-assign-exam');
+                if (selectExam) {
+                    selectExam.innerHTML = '';
+                    state.exams.forEach(exam => {
+                        const opt = document.createElement('option');
+                        opt.value = exam.id;
+                        opt.textContent = `${exam.title} (${exam.questions.length} câu - Mức độ: ${exam.difficulty})`;
+                        selectExam.appendChild(opt);
+                    });
+                }
+                
+                // Wire up assign button
+                const btnAssign = document.getElementById('btn-assign-homework');
+                const selectAssignExam = document.getElementById('select-assign-exam');
+                const inputAssignDue = document.getElementById('input-assign-due');
+                
+                if (btnAssign) {
+                    btnAssign.onclick = () => {
+                        const examId = selectAssignExam.value;
+                        const dueDateVal = inputAssignDue.value;
+                        
+                        if (!examId) {
+                            showToast("Vui lòng chọn một đề thi để giao!", "warning");
+                            return;
+                        }
+                        if (!dueDateVal) {
+                            showToast("Vui lòng thiết lập thời hạn nộp bài (Hạn chót)!", "warning");
+                            return;
+                        }
+                        
+                        const matchedExam = state.exams.find(e => e.id === examId);
+                        if (!matchedExam) return;
+                        
+                        const classrooms = JSON.parse(localStorage.getItem('quizflow_classrooms') || '[]');
+                        const classIdx = classrooms.findIndex(c => c.id === classroom.id);
+                        if (classIdx === -1) return;
+                        
+                        if (!classrooms[classIdx].assignments) {
+                            classrooms[classIdx].assignments = [];
+                        }
+                        
+                        const newAssign = {
+                            id: "assign-" + Date.now(),
+                            examId: examId,
+                            examTitle: matchedExam.title,
+                            assignedAt: Date.now(),
+                            dueDate: new Date(dueDateVal).toISOString()
+                        };
+                        
+                        classrooms[classIdx].assignments.push(newAssign);
+                        
+                        // Send system notification to all classroom student members
+                        const notifications = JSON.parse(localStorage.getItem('quizflow_notifications') || '[]');
+                        const dueDateStr = new Date(dueDateVal).toLocaleString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            day: '2-digit',
+                            month: '2-digit'
+                        });
+                        
+                        classrooms[classIdx].members.forEach(member => {
+                            notifications.push({
+                                id: "notif-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5),
+                                username: member.username,
+                                title: "Bài tập mới được giao!",
+                                message: `Giáo viên ${classroom.teacherName} đã giao bài tập "${matchedExam.title}" cho lớp "${classroom.name}". Hạn chót: ${dueDateStr}.`,
+                                type: "assignment",
+                                isRead: false,
+                                createdAt: Date.now()
+                            });
+                        });
+                        
+                        localStorage.setItem('quizflow_notifications', JSON.stringify(notifications));
+                        localStorage.setItem('quizflow_classrooms', JSON.stringify(classrooms));
+                        
+                        // Clear input
+                        inputAssignDue.value = '';
+                        showToast(`Đã giao bài tập "${matchedExam.title}" cho lớp thành công!`, "success");
+                        
+                        // Re-render assignments panel with updated classroom info
+                        setupAssignmentPanel(classrooms[classIdx]);
+                    };
+                }
+            }
+        } else {
+            if (assignBox) assignBox.style.display = 'none';
+        }
+        
+        renderAssignments(classroom);
+    }
+
+    function renderAssignments(classroom) {
+        const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
+        const assignsList = classroom.assignments || [];
+        
+        const tableBody = document.getElementById('classroom-assignments-table-body');
+        const noAssignsState = document.getElementById('classroom-no-assignments-state');
+        
+        if (!tableBody) return;
+        tableBody.innerHTML = '';
+        
+        if (assignsList.length === 0) {
+            if (noAssignsState) noAssignsState.style.display = 'block';
+            return;
+        }
+        
+        if (noAssignsState) noAssignsState.style.display = 'none';
+        
+        assignsList.forEach((assign, idx) => {
+            const tr = document.createElement('tr');
+            tr.style.cssText = 'border-bottom: 1px solid var(--border-color);';
+            
+            const assignedDateStr = new Date(assign.assignedAt).toLocaleDateString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit'
+            });
+            
+            const dueDateStr = new Date(assign.dueDate).toLocaleDateString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit'
+            });
+            
+            const isOverdue = new Date() > new Date(assign.dueDate);
+            
+            let statusTextHTML = '';
+            let actionBtnHTML = '';
+            
+            if (isTeacher) {
+                // For teachers: Show "X/Y student(s) submitted"
+                let submittedCount = 0;
+                classroom.members.forEach(member => {
+                    const hasDone = state.attempts.some(att => att.username.toLowerCase() === member.username.toLowerCase() && att.examId === assign.examId && new Date(att.startTime) >= new Date(assign.assignedAt));
+                    if (hasDone) submittedCount++;
+                });
+                statusTextHTML = `<span style="font-weight: 600; color: var(--primary);">${submittedCount}/${classroom.members.length} học viên nộp</span>`;
+                
+                // Show delete button for teacher
+                actionBtnHTML = `
+                    <button class="btn btn-sm btn-outline-danger btn-delete-assignment" data-assign-id="${assign.id}">
+                        <i class="fa-solid fa-trash-can"></i> Hủy Giao
+                    </button>
+                `;
+            } else {
+                // For students: Show "Done" or "Not Done" or "Overdue"
+                const userAttempts = state.attempts.filter(att => att.username.toLowerCase() === currentUser.username.toLowerCase() && att.examId === assign.examId && new Date(att.startTime) >= new Date(assign.assignedAt));
+                
+                if (userAttempts.length > 0) {
+                    // Sort to get best attempt
+                    userAttempts.sort((a, b) => b.scorePercentage - a.scorePercentage);
+                    const bestAttempt = userAttempts[0];
+                    statusTextHTML = `<span class="badge badge-success" style="padding: 4px 8px;"><i class="fa-solid fa-circle-check"></i> Đạt: ${bestAttempt.scorePercentage}%</span>`;
+                    
+                    actionBtnHTML = `
+                        <button class="btn btn-sm btn-outline-primary btn-review-assigned-result" data-attempt-id="${bestAttempt.id}">
+                            <i class="fa-solid fa-eye"></i> Xem Lại
+                        </button>
+                    `;
+                } else {
+                    if (isOverdue) {
+                        statusTextHTML = `<span class="badge badge-danger" style="padding: 4px 8px;"><i class="fa-solid fa-circle-xmark"></i> Quá Hạn</span>`;
+                        actionBtnHTML = `
+                            <button class="btn btn-sm btn-outline-secondary" disabled style="opacity: 0.5;">
+                                <i class="fa-solid fa-lock"></i> Đã Khoá
+                            </button>
+                        `;
+                    } else {
+                        statusTextHTML = `<span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px;"><i class="fa-solid fa-clock"></i> Chưa Làm</span>`;
+                        actionBtnHTML = `
+                            <button class="btn btn-sm btn-primary btn-start-assignment" data-exam-id="${assign.examId}">
+                                <i class="fa-solid fa-pencil"></i> Làm Bài
+                            </button>
+                        `;
+                    }
+                }
+            }
+            
+            tr.innerHTML = `
+                <td style="padding: 12px 10px; font-weight: 700;">${idx + 1}</td>
+                <td style="padding: 12px 10px; font-weight: 700; color: var(--text-primary);">${assign.examTitle}</td>
+                <td style="padding: 12px 10px; color: var(--text-secondary); font-size: 12px;">${assignedDateStr}</td>
+                <td style="padding: 12px 10px; color: ${isOverdue ? '#f43f5e' : '#10b981'}; font-size: 12px; font-weight: 600;">${dueDateStr}</td>
+                <td style="padding: 12px 10px;">${statusTextHTML}</td>
+                <td style="padding: 12px 10px;">${actionBtnHTML}</td>
+            `;
+            
+            tableBody.appendChild(tr);
+        });
+        
+        // Wire up action buttons
+        // 1. Delete assignment (for teachers)
+        document.querySelectorAll('.btn-delete-assignment').forEach(btn => {
+            btn.onclick = () => {
+                const assignId = btn.getAttribute('data-assign-id');
+                if (confirm("Bạn có chắc chắn muốn hủy giao bài tập này? Kết quả làm bài tập của sinh viên cho bài tập này cũng sẽ bị ẩn trong lớp.")) {
+                    const classrooms = JSON.parse(localStorage.getItem('quizflow_classrooms') || '[]');
+                    const classIdx = classrooms.findIndex(c => c.id === classroom.id);
+                    if (classIdx === -1) return;
+                    
+                    classrooms[classIdx].assignments = classrooms[classIdx].assignments.filter(a => a.id !== assignId);
+                    localStorage.setItem('quizflow_classrooms', JSON.stringify(classrooms));
+                    
+                    showToast("Đã hủy giao bài tập thành công!", "success");
+                    setupAssignmentPanel(classrooms[classIdx]);
+                }
+            };
+        });
+        
+        // 2. Start assignment (for students)
+        document.querySelectorAll('.btn-start-assignment').forEach(btn => {
+            btn.onclick = () => {
+                const examId = btn.getAttribute('data-exam-id');
+                const matchedExam = state.exams.find(e => e.id === examId);
+                if (matchedExam) {
+                    if (matchedExam.questions.length === 0) {
+                        showToast("Đề thi này chưa có câu hỏi nào! Vui lòng liên hệ Giáo viên.", "error");
+                        return;
+                    }
+                    showToast(`Bắt đầu làm bài tập: ${matchedExam.title}...`, "success");
+                    setTimeout(() => {
+                        localStorage.setItem('quizflow_active_exam_id', examId);
+                        localStorage.setItem('quizflow_active_room_code', ''); 
+                        window.location.href = 'trangcon/exam.html';
+                    }, 1000);
+                }
+            };
+        });
+        
+        // 3. Review result (for students)
+        document.querySelectorAll('.btn-review-assigned-result').forEach(btn => {
+            btn.onclick = () => {
+                const attemptId = btn.getAttribute('data-attempt-id');
+                localStorage.setItem('quizflow_review_attempt_id', attemptId);
+                window.location.href = 'trangcon/result.html';
+            };
+        });
+    }
+
+    function initClassroomEvents() {
+        const isTeacher = currentUser.role === 'admin' || currentUser.role === 'teacher';
+        
+        const teacherAction = document.getElementById('classroom-teacher-action');
+        const studentAction = document.getElementById('classroom-student-action');
+        
+        if (isTeacher) {
+            if (teacherAction) teacherAction.style.display = 'block';
+            if (studentAction) studentAction.style.display = 'none';
+            
+            const btnCreate = document.getElementById('btn-create-classroom');
+            const inputName = document.getElementById('input-classroom-name');
+            
+            if (btnCreate && inputName) {
+                btnCreate.addEventListener('click', () => {
+                    const name = inputName.value.trim();
+                    if (!name) {
+                        showToast("Vui lòng nhập tên lớp học!", "warning");
+                        return;
+                    }
+                    
+                    const code = generateClassroomCode();
+                    const newClassroom = {
+                        id: "classroom-" + Date.now(),
+                        name: name,
+                        code: code,
+                        teacherUsername: currentUser.username,
+                        teacherName: currentUser.name,
+                        createdAt: Date.now(),
+                        members: []
+                    };
+                    
+                    const classrooms = JSON.parse(localStorage.getItem('quizflow_classrooms') || '[]');
+                    classrooms.push(newClassroom);
+                    localStorage.setItem('quizflow_classrooms', JSON.stringify(classrooms));
+                    
+                    inputName.value = '';
+                    showToast(`Kích hoạt lớp học "${name}" thành công! Mã lớp: ${code}`, "success");
+                    renderClassrooms();
+                });
+            }
+        } else {
+            if (teacherAction) teacherAction.style.display = 'none';
+            if (studentAction) studentAction.style.display = 'block';
+            
+            const btnJoin = document.getElementById('btn-join-classroom');
+            const inputCode = document.getElementById('input-classroom-code');
+            
+            if (btnJoin && inputCode) {
+                btnJoin.addEventListener('click', () => {
+                    const code = inputCode.value.trim().toUpperCase();
+                    if (code.length !== 8) {
+                        showToast("Mã lớp học bắt buộc phải gồm đúng 8 ký tự!", "warning");
+                        return;
+                    }
+                    
+                    const classrooms = JSON.parse(localStorage.getItem('quizflow_classrooms') || '[]');
+                    const classroomIdx = classrooms.findIndex(c => c.code === code);
+                    
+                    if (classroomIdx === -1) {
+                        showToast("Mã lớp học không tồn tại trên hệ thống!", "error");
+                        return;
+                    }
+                    
+                    const classroom = classrooms[classroomIdx];
+                    const isAlreadyMember = classroom.members.some(m => m.username.toLowerCase() === currentUser.username.toLowerCase());
+                    
+                    if (isAlreadyMember) {
+                        showToast("Bạn đã tham gia lớp học này từ trước!", "warning");
+                        return;
+                    }
+                    
+                    // Add member
+                    classroom.members.push({
+                        username: currentUser.username,
+                        name: currentUser.name,
+                        studentType: currentUser.studentType || 'học sinh',
+                        joinedAt: Date.now()
+                    });
+                    
+                    localStorage.setItem('quizflow_classrooms', JSON.stringify(classrooms));
+                    inputCode.value = '';
+                    
+                    showToast(`Đã tham gia lớp học "${classroom.name}" thành công!`, "success");
+                    renderClassrooms();
+                    selectClassroom(classroom.id);
+                });
+                
+                inputCode.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        btnJoin.click();
+                    }
+                });
+            }
+        }
+    }
+
+    // --- 11. STUDENT HOMEWORK & NOTIFICATIONS SERVICE ---
+    function renderStudentHomework() {
+        const isStudent = currentUser.role === 'student' || (!currentUser.role || currentUser.role === 'sinh viên');
+        const homeworkSection = document.getElementById('student-homework-section');
+        const homeworkGrid = document.getElementById('student-homework-grid');
+        const homeworkBadge = document.getElementById('student-homework-badge');
+        
+        if (!homeworkSection || !homeworkGrid) return;
+        
+        if (!isStudent) {
+            homeworkSection.style.display = 'none';
+            return;
+        }
+        
+        const classrooms = JSON.parse(localStorage.getItem('quizflow_classrooms') || '[]');
+        
+        // Find all classrooms student belongs to
+        const myClasses = classrooms.filter(c => c.members.some(m => m.username.toLowerCase() === currentUser.username.toLowerCase()));
+        
+        let pendingHomeworks = [];
+        
+        myClasses.forEach(c => {
+            const assigns = c.assignments || [];
+            assigns.forEach(assign => {
+                // Check if already completed by this student
+                const isCompleted = state.attempts.some(att => att.username.toLowerCase() === currentUser.username.toLowerCase() && att.examId === assign.examId && new Date(att.startTime) >= new Date(assign.assignedAt));
+                
+                // Check if overdue
+                const isOverdue = new Date() > new Date(assign.dueDate);
+                
+                if (!isCompleted && !isOverdue) {
+                    pendingHomeworks.push({
+                        ...assign,
+                        className: c.name,
+                        teacherName: c.teacherName
+                    });
+                }
+            });
+        });
+        
+        if (pendingHomeworks.length === 0) {
+            homeworkSection.style.display = 'none';
+            return;
+        }
+        
+        homeworkSection.style.display = 'flex';
+        if (homeworkBadge) homeworkBadge.textContent = `${pendingHomeworks.length} bài tập`;
+        
+        homeworkGrid.innerHTML = '';
+        
+        pendingHomeworks.forEach(hw => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between; gap: 14px; position: relative; overflow: hidden; transition: all 0.25s; border-left: 4px solid #f59e0b;';
+            
+            // Hover styling
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+                card.style.boxShadow = 'var(--shadow-md)';
+                card.style.borderColor = '#f59e0b';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'none';
+                card.style.boxShadow = 'var(--shadow-sm)';
+                card.style.borderColor = 'var(--border-color)';
+            });
+            
+            const dueDateStr = new Date(hw.dueDate).toLocaleString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit'
+            });
+            
+            // Calculate remaining time
+            const diffMs = new Date(hw.dueDate) - new Date();
+            const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+            let remainingText = '';
+            if (diffHours <= 24) {
+                remainingText = `Gấp: Còn ${diffHours} giờ`;
+            } else {
+                remainingText = `Còn ${Math.ceil(diffHours / 24)} ngày`;
+            }
+            
+            card.innerHTML = `
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <span style="font-size: 11px; background: rgba(245, 158, 11, 0.15); color: #d97706; padding: 2px 6px; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-clock"></i> ${remainingText}
+                        </span>
+                        <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Hạn: ${dueDateStr}</span>
+                    </div>
+                    <h3 style="font-size: 15px; font-weight: 800; color: var(--text-primary); margin-top: 10px; margin-bottom: 6px; line-height: 1.4;">${hw.examTitle}</h3>
+                    <div style="font-size: 12px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 4px;">
+                        <span><i class="fa-solid fa-graduation-cap" style="width: 14px;"></i> Lớp: <strong>${hw.className}</strong></span>
+                        <span><i class="fa-solid fa-chalkboard-user" style="width: 14px;"></i> GV: ${hw.teacherName}</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-homework-start" data-exam-id="${hw.examId}" style="width: 100%; padding: 8px 12px; font-weight: 700; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-solid fa-pencil"></i> Làm Bài Ngay
+                </button>
+            `;
+            
+            // Start assignment action
+            const startBtn = card.querySelector('.btn-homework-start');
+            if (startBtn) {
+                startBtn.onclick = () => {
+                    const matchedExam = state.exams.find(e => e.id === hw.examId);
+                    if (matchedExam) {
+                        if (matchedExam.questions.length === 0) {
+                            showToast("Đề thi này chưa có câu hỏi nào! Vui lòng liên hệ Giáo viên.", "error");
+                            return;
+                        }
+                        showToast(`Bắt đầu làm bài tập về nhà: ${matchedExam.title}...`, "success");
+                        setTimeout(() => {
+                            localStorage.setItem('quizflow_active_exam_id', hw.examId);
+                            localStorage.setItem('quizflow_active_room_code', ''); 
+                            window.location.href = 'trangcon/exam.html';
+                        }, 1000);
+                    }
+                };
+            }
+            
+            homeworkGrid.appendChild(card);
+        });
+    }
+
+    function setupNotificationCenter() {
+        const notifWrapper = document.getElementById('notif-wrapper');
+        const btnNotif = document.getElementById('btn-notifications');
+        const notifPanel = document.getElementById('notif-panel');
+        const notifBadge = document.getElementById('notif-badge');
+        const notifContainer = document.getElementById('notif-list-container');
+        const btnClear = document.getElementById('btn-clear-notif');
+        
+        if (!notifWrapper || !btnNotif || !notifPanel || !notifContainer) return;
+        
+        // 1. Toggle dropdown panel
+        btnNotif.onclick = (e) => {
+            e.stopPropagation();
+            const isShown = notifPanel.style.display === 'flex';
+            if (isShown) {
+                notifPanel.style.display = 'none';
+            } else {
+                notifPanel.style.display = 'flex';
+                // Close other dropdowns if any
+                const profileDropdown = document.getElementById('profile-dropdown-content');
+                if (profileDropdown) profileDropdown.style.display = 'none';
+            }
+        };
+        
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+            if (!notifWrapper.contains(e.target)) {
+                notifPanel.style.display = 'none';
+            }
+        });
+        
+        // 2. Render Notifications
+        const renderNotifs = () => {
+            const notifications = JSON.parse(localStorage.getItem('quizflow_notifications') || '[]');
+            const myNotifs = notifications.filter(n => n.username.toLowerCase() === currentUser.username.toLowerCase());
+            
+            // Sort by newness
+            myNotifs.sort((a, b) => b.createdAt - a.createdAt);
+            
+            const unreadCount = myNotifs.filter(n => !n.isRead).length;
+            
+            if (unreadCount > 0) {
+                notifBadge.style.display = 'block';
+            } else {
+                notifBadge.style.display = 'none';
+            }
+            
+            notifContainer.innerHTML = '';
+            
+            if (myNotifs.length === 0) {
+                notifContainer.innerHTML = `
+                    <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 12px;">
+                        <i class="fa-regular fa-bell-slash" style="font-size: 20px; margin-bottom: 8px; opacity: 0.5;"></i>
+                        <p>Bạn không có thông báo nào.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            myNotifs.forEach(n => {
+                const item = document.createElement('div');
+                item.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; font-size: 12px; transition: background 0.2s; cursor: pointer; background: ${n.isRead ? 'var(--bg-secondary)' : 'rgba(79, 70, 229, 0.03)'};`;
+                
+                const timeStr = new Date(n.createdAt).toLocaleDateString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    day: '2-digit',
+                    month: '2-digit'
+                });
+                
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                        <strong style="color: ${n.isRead ? 'var(--text-secondary)' : 'var(--primary)'}; font-weight: ${n.isRead ? '600' : '800'}; font-size: 12.5px;">${n.title}</strong>
+                        <span style="font-size: 10px; color: var(--text-muted); font-weight: 500;">${timeStr}</span>
+                    </div>
+                    <p style="color: var(--text-primary); margin: 0; line-height: 1.4; font-weight: ${n.isRead ? '400' : '500'};">${n.message}</p>
+                `;
+                
+                // Clicking on a notification marks it as read
+                item.onclick = () => {
+                    const notifs = JSON.parse(localStorage.getItem('quizflow_notifications') || '[]');
+                    const idx = notifs.findIndex(item => item.id === n.id);
+                    if (idx !== -1) {
+                        notifs[idx].isRead = true;
+                        localStorage.setItem('quizflow_notifications', JSON.stringify(notifs));
+                        renderNotifs();
+                    }
+                };
+                
+                notifContainer.appendChild(item);
+            });
+        };
+        
+        renderNotifs();
+        
+        // 3. Mark all as read action
+        btnClear.onclick = () => {
+            const notifications = JSON.parse(localStorage.getItem('quizflow_notifications') || '[]');
+            notifications.forEach(n => {
+                if (n.username.toLowerCase() === currentUser.username.toLowerCase()) {
+                    n.isRead = true;
+                }
+            });
+            localStorage.setItem('quizflow_notifications', JSON.stringify(notifications));
+            showToast("Đã đánh dấu tất cả thông báo là đã đọc!", "success");
+            renderNotifs();
+        };
     }
 
     // --- 8. PAGE INITS ---
@@ -1273,4 +2184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderExams();
     renderHistory();
     initViewSwitcher();
+    initClassroomEvents();
+    renderStudentHomework();
+    setupNotificationCenter();
 });
