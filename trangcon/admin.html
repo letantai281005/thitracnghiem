@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị Hệ Thống - QuizFlow</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet (stepped up one level) -->
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+    <!-- APP HEADER -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area" id="logo-btn" onclick="window.location.href='../index.html'">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-main">QuizFlow</span>
+                    <span class="logo-sub">Trung Tâm Quản Trị</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item" onclick="window.location.href='../index.html'">
+                    <i class="fa-solid fa-house"></i> Về Dashboard Thí Sinh
+                </button>
+            </nav>
+
+            <div class="header-actions">
+                <!-- Theme Toggle Button -->
+                <button class="action-btn" id="theme-toggle" title="Thay đổi giao diện Sáng/Tối">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+
+                <!-- Profile widget -->
+                <div class="profile-widget">
+                    <div class="avatar-circle">
+                        <i class="fa-solid fa-user-shield" id="user-avatar-preview"></i>
+                    </div>
+                    <div class="profile-info">
+                        <span class="profile-name" id="user-name-preview">Quản Trị Viên</span>
+                        <span class="profile-role">Quản lý hệ thống</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="main-content">
+        
+        <!-- ADMINISTRATOR PANEL VIEW -->
+        <section id="admin-view" class="view-section active">
+            <div class="admin-dashboard-header">
+                <div class="admin-header-text">
+                    <h1><i class="fa-solid fa-sliders"></i> Trung Tâm Quản Trị Hệ Thống</h1>
+                    <p>Quản lý toàn bộ thư viện đề thi, soạn thảo câu hỏi trắc nghiệm, và giám sát lịch sử làm bài thi của sinh viên.</p>
+                </div>
+                <div class="admin-global-actions">
+                    <button class="btn btn-success" id="btn-admin-add-exam">
+                        <i class="fa-solid fa-circle-plus"></i> Tạo Đề Thi Mới
+                    </button>
+                    <button class="btn btn-outline-danger" id="btn-admin-reset-system" title="Khôi phục dữ liệu mẫu mặc định ban đầu">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Dữ Liệu
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Navigation Tabs -->
+            <div class="admin-nav-tabs" style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                <button class="tab-btn active" id="tab-admin-exams" style="font-weight: 700; display: flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: var(--radius-md); border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all var(--transition-fast);"><i class="fa-solid fa-folder-open"></i> Đề Thi & Ngân Hàng Câu Hỏi</button>
+                <button class="tab-btn" id="tab-admin-users" style="font-weight: 700; display: flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: var(--radius-md); border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all var(--transition-fast);"><i class="fa-solid fa-users"></i> Quản Lý Người Dùng & Phân Quyền</button>
+                <button class="tab-btn" id="tab-admin-settings" style="font-weight: 700; display: flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: var(--radius-md); border: none; background: transparent; color: var(--text-secondary); cursor: pointer; transition: all var(--transition-fast);"><i class="fa-solid fa-calendar-days"></i> Lịch Thi & Chống Gian Lận</button>
+            </div>
+
+            <!-- EXAMS & QUESTIONS PANEL -->
+            <div id="panel-exams-container" class="admin-panel-section">
+                <!-- System Wide Statistics -->
+                <div class="admin-stats-summary">
+                    <div class="admin-stat-box">
+                        <div class="box-icon color-primary"><i class="fa-solid fa-folder-open"></i></div>
+                        <div class="box-data">
+                            <span class="box-label">Tổng Đề Thi</span>
+                            <h4 class="box-val" id="admin-total-exams">0</h4>
+                        </div>
+                    </div>
+                    <div class="admin-stat-box">
+                        <div class="box-icon color-success"><i class="fa-solid fa-clipboard-question"></i></div>
+                        <div class="box-data">
+                            <span class="box-label">Tổng Số Câu Hỏi</span>
+                            <h4 class="box-val" id="admin-total-questions">0</h4>
+                        </div>
+                    </div>
+                    <div class="admin-stat-box">
+                        <div class="box-icon color-warning"><i class="fa-solid fa-users"></i></div>
+                        <div class="box-data">
+                            <span class="box-label">Số Lần Nộp Bài</span>
+                            <h4 class="box-val" id="admin-total-attempts">0</h4>
+                        </div>
+                    </div>
+                    <div class="admin-stat-box">
+                        <div class="box-icon color-info"><i class="fa-solid fa-square-poll-vertical"></i></div>
+                        <div class="box-data">
+                            <span class="box-label">Điểm Trung Bình Hệ Thống</span>
+                            <h4 class="box-val" id="admin-avg-score">0.0%</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Layout Split -->
+                <div class="admin-split-layout">
+                    
+                    <!-- Left: List of Exams Management -->
+                    <div class="admin-panel-card card-exams-list">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-file-lines"></i> Danh Sách Đề Thi</h3>
+                            <span class="badge badge-info" id="admin-exams-count">0 Đề</span>
+                        </div>
+                        <div class="admin-exams-scroll" id="admin-exams-list-container">
+                            <!-- Exam rows to edit/delete rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Active Exam Questions Manager -->
+                    <div class="admin-panel-card card-questions-list">
+                        <div class="card-header border-b-0">
+                            <div class="header-q-title-area">
+                                <h3><i class="fa-solid fa-question"></i> Chi Tiết Câu Hỏi</h3>
+                                <p class="selected-exam-indicator" id="admin-selected-exam-title">Đề đang chọn: (Chưa chọn)</p>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-sm btn-outline" id="btn-admin-bulk-import" disabled title="Nhập nhanh danh sách câu hỏi bằng văn bản">
+                                    <i class="fa-solid fa-file-import"></i> Nhập Bulk
+                                </button>
+                                <button class="btn btn-sm btn-primary" id="btn-admin-add-question" disabled>
+                                    <i class="fa-solid fa-plus"></i> Thêm Câu Hỏi
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Inner Scroll Questions -->
+                        <div class="admin-questions-scroll" id="admin-questions-list-container">
+                            <div class="placeholder-select-exam">
+                                <i class="fa-solid fa-arrow-left pulse-arrow-icon"></i>
+                                <p>Vui lòng click chọn một **Đề thi** từ danh sách bên trái để chỉnh sửa và quản lý danh sách câu hỏi chi tiết.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Candidate Global Exam Attempts Log -->
+                <div class="admin-panel-card card-global-attempts-history">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-ranking-star"></i> Nhật Ký Lịch Sử Làm Bài - Toàn Hệ Thống</h3>
+                        <div class="action-wrap">
+                            <button class="btn btn-sm btn-outline" id="btn-export-history-json" title="Xuất toàn bộ kết quả học viên ra định dạng dữ liệu JSON">
+                                <i class="fa-solid fa-download"></i> Xuất JSON
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" id="btn-clear-global-attempts">
+                                <i class="fa-solid fa-trash-arrow-up"></i> Xóa Toàn Bộ Lịch Sử
+                            </button>
+                        </div>
+                    </div>
+                    <div class="history-table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Học Sinh / Thí Sinh</th>
+                                    <th>Tên Đề Thi</th>
+                                    <th>Ngày Làm</th>
+                                    <th>Thời Gian làm</th>
+                                    <th>Câu Đúng</th>
+                                    <th>Điểm Số</th>
+                                    <th>Đánh Giá</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-global-attempts-table-body">
+                                <!-- All attempts listed here dynamically -->
+                            </tbody>
+                        </table>
+                        <div class="no-history-state" id="admin-no-attempts-placeholder">
+                            <i class="fa-solid fa-database empty-icon"></i>
+                            <p>Không tìm thấy dữ liệu thi trắc nghiệm nào trên toàn hệ thống.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MEMBERS & USER MANAGEMENT PANEL -->
+            <div id="panel-users-container" class="admin-panel-section" style="display: none;">
+                <div class="admin-panel-card" style="padding: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary);"><i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> Quản Lý Thành Viên & Phân Quyền</h3>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Danh sách tất cả tài khoản trong cơ sở dữ liệu. Admin có quyền cấp tài khoản mới, phân quyền truy cập, kích hoạt hoặc tạm khóa người dùng.</p>
+                        </div>
+                        <button class="btn btn-primary" id="btn-admin-add-user">
+                            <i class="fa-solid fa-user-plus"></i> Tạo Tài Khoản Mới
+                        </button>
+                    </div>
+
+                    <div class="history-table-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Avatar</th>
+                                    <th>Tên Đăng Nhập</th>
+                                    <th>Họ & Tên</th>
+                                    <th>Quyền Hạn</th>
+                                    <th>Ngày Tạo</th>
+                                    <th>Trạng Thái</th>
+                                    <th style="text-align: center;">Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table-body">
+                                <!-- Loaded dynamically via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCHEDULE & ANTI-CHEAT PANEL -->
+            <div id="panel-settings-container" class="admin-panel-section" style="display: none;">
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px;">
+                    
+                    <!-- Lịch Thi Panel -->
+                    <div class="admin-panel-card" style="padding: 24px;">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;"><i class="fa-solid fa-calendar-days" style="color: var(--primary);"></i> Lên Lịch Thời Gian Mở/Đóng Đề Thi</h3>
+                        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Lựa chọn một đề thi cụ thể trong thư viện và quy định khung thời gian mở khóa. Học sinh ngoài khoảng thời gian này sẽ bị hệ thống chặn làm bài.</p>
+                        
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="settings-select-exam">Chọn đề thi cần cấu hình lịch:</label>
+                            <select id="settings-select-exam" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary); font-weight: 500;">
+                                <!-- Loaded dynamically -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-grid-2" style="margin-top: 16px; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label for="settings-start-date">Thời gian mở đề (Bắt đầu):</label>
+                                <input type="datetime-local" id="settings-start-date" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);">
+                            </div>
+                            <div class="form-group">
+                                <label for="settings-end-date">Thời gian đóng đề (Kết thúc):</label>
+                                <input type="datetime-local" id="settings-end-date" style="width: 100%; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);">
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button class="btn btn-outline" id="btn-settings-clear-schedule" style="flex: 1;"><i class="fa-solid fa-trash-can"></i> Gỡ Bỏ Lịch</button>
+                            <button class="btn btn-primary" id="btn-settings-save-schedule" style="flex: 1.5;"><i class="fa-solid fa-floppy-disk"></i> Lưu & Áp Dụng Lịch</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Chống Gian Lận (Anti-Cheat Config) -->
+                    <div class="admin-panel-card" style="padding: 24px;">
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;"><i class="fa-solid fa-shield-halved" style="color: var(--danger);"></i> Chế Độ Chống Gian Lận (Anti-Cheat)</h3>
+                        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Bảo vệ kỳ thi bằng cách chặn các hành vi tìm kiếm đáp án. Các thay đổi sẽ có hiệu lực tức thì cho các phòng thi của học viên.</p>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: var(--radius-md); background-color: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.2);">
+                                <div style="flex: 1; padding-right: 12px;">
+                                    <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Phát hiện chuyển Tab & Thoát màn hình</h4>
+                                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Cảnh báo học sinh khi thoát hoặc đổi tab. Tự động thu và nộp bài thi ngay sau 3 lần vi phạm.</p>
+                                </div>
+                                <label class="switch-premium" style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+                                    <input type="checkbox" id="anticheat-tab-switch" checked style="opacity: 0; width: 0; height: 0;">
+                                    <span class="slider-premium" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: var(--radius-md); background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+                                <div style="flex: 1; padding-right: 12px;">
+                                    <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Chặn chuột phải & Vô hiệu Copy/Paste</h4>
+                                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Vô hiệu hóa menu chuột phải, cấm sao chép nội dung câu hỏi hoặc dán dữ liệu vào phòng thi.</p>
+                                </div>
+                                <label class="switch-premium" style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+                                    <input type="checkbox" id="anticheat-disable-copy" checked style="opacity: 0; width: 0; height: 0;">
+                                    <span class="slider-premium" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: var(--radius-md); background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+                                <div style="flex: 1; padding-right: 12px;">
+                                    <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Bắt buộc Toàn Màn Hình (Fullscreen)</h4>
+                                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Yêu cầu và kích hoạt chế độ làm bài toàn màn hình. Cảnh báo hoặc trừ điểm nếu cố tình thoát ra.</p>
+                                </div>
+                                <label class="switch-premium" style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+                                    <input type="checkbox" id="anticheat-fullscreen" checked style="opacity: 0; width: 0; height: 0;">
+                                    <span class="slider-premium" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-full" id="btn-save-anticheat-config" style="margin-top: 24px;"><i class="fa-solid fa-check-double"></i> Áp Dụng Cấu Hình Anti-Cheat</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==============================================
+         MODAL DIALOGS & OVERLAYS (ADMIN EXCLUSIVE)
+         ============================================== -->
+    
+    <!-- ADD/EDIT EXAM MODAL -->
+    <div class="modal-overlay" id="modal-exam-form">
+        <div class="modal-card animate-slide-up">
+            <div class="modal-header-classic">
+                <h3 class="modal-classic-title" id="exam-modal-title-text">Tạo Đề Thi Trắc Nghiệm Mới</h3>
+                <button class="modal-close-x" id="btn-close-exam-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-classic-body">
+                <form id="admin-exam-form">
+                    <input type="hidden" id="form-exam-id">
+                    <div class="form-group">
+                        <label for="form-exam-title">Tiêu đề đề thi: <span class="req">*</span></label>
+                        <input type="text" id="form-exam-title" placeholder="Ví dụ: Thi cuối kỳ môn Mạng Máy Tính" required>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="form-exam-subject">Môn học / Chủ đề: <span class="req">*</span></label>
+                            <select id="form-exam-subject" required>
+                                <option value="Tin học">Tin học</option>
+                                <option value="Tiếng Anh">Tiếng Anh</option>
+                                <option value="Lịch sử">Lịch sử</option>
+                                <option value="Khác">Tự tạo/Khác</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="form-exam-duration">Thời gian làm bài (Phút): <span class="req">*</span></label>
+                            <input type="number" id="form-exam-duration" min="1" max="180" placeholder="15" required>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="form-exam-passscore">Điểm chuẩn qua môn (%): <span class="req">*</span></label>
+                            <input type="number" id="form-exam-passscore" min="10" max="100" placeholder="50" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="form-exam-difficulty">Độ khó đề thi:</label>
+                            <select id="form-exam-difficulty">
+                                <option value="Dễ">Dễ</option>
+                                <option value="Trung bình" selected>Trung bình</option>
+                                <option value="Khó">Khó</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-exam-code">Mã đề thi 5 ký tự (Học sinh dùng để vào thi nhanh):</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="form-exam-code" maxlength="5" placeholder="Tự động hoặc tự nhập (VD: A8B9C)" style="text-transform: uppercase; flex: 1;">
+                            <button type="button" class="btn btn-outline" id="btn-generate-exam-code" style="padding: 10px 14px;"><i class="fa-solid fa-arrows-rotate"></i> Tạo Mã Ngẫu Nhiên</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-exam-description">Mô tả ngắn gọn đề thi:</label>
+                        <textarea id="form-exam-description" rows="3" placeholder="Mô tả nội dung kiểm tra, phạm vi kiến thức..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-classic-footer">
+                <button class="btn btn-outline" id="btn-cancel-exam-modal">Huỷ Bỏ</button>
+                <button class="btn btn-success" id="btn-save-exam-modal">Lưu Đề Thi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD/EDIT QUESTION MODAL -->
+    <div class="modal-overlay" id="modal-question-form">
+        <div class="modal-card modal-card-large animate-slide-up">
+            <div class="modal-header-classic">
+                <h3 class="modal-classic-title" id="question-modal-title-text">Thêm Câu Hỏi Trắc Nghiệm Mới</h3>
+                <button class="modal-close-x" id="btn-close-question-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-classic-body">
+                <form id="admin-question-form">
+                    <input type="hidden" id="form-question-id">
+                    
+                    <div class="form-group">
+                        <label for="form-question-text">Câu hỏi (Nội dung câu hỏi đề bài): <span class="req">*</span></label>
+                        <textarea id="form-question-text" rows="3" placeholder="Nhập câu hỏi tại đây..." required></textarea>
+                    </div>
+
+                    <div class="choices-edit-panel">
+                        <label class="panel-main-label">Các phương án trả lời và lựa chọn đáp án đúng: <span class="req">*</span></label>
+                        
+                        <!-- Option A -->
+                        <div class="choice-input-row">
+                            <div class="radio-wrap">
+                                <input type="radio" name="form-correct-answer" id="correct-a" value="0" checked>
+                                <label for="correct-a" class="correct-badge" title="Tích chọn nếu đây là ĐÁP ÁN ĐÚNG">A</label>
+                            </div>
+                            <input type="text" id="form-option-0" placeholder="Nội dung phương án A..." required>
+                        </div>
+
+                        <!-- Option B -->
+                        <div class="choice-input-row">
+                            <div class="radio-wrap">
+                                <input type="radio" name="form-correct-answer" id="correct-b" value="1">
+                                <label for="correct-b" class="correct-badge" title="Tích chọn nếu đây là ĐÁP ÁN ĐÚNG">B</label>
+                            </div>
+                            <input type="text" id="form-option-1" placeholder="Nội dung phương án B..." required>
+                        </div>
+
+                        <!-- Option C -->
+                        <div class="choice-input-row">
+                            <div class="radio-wrap">
+                                <input type="radio" name="form-correct-answer" id="correct-c" value="2">
+                                <label for="correct-c" class="correct-badge" title="Tích chọn nếu đây là ĐÁP ÁN ĐÚNG">C</label>
+                            </div>
+                            <input type="text" id="form-option-2" placeholder="Nội dung phương án C..." required>
+                        </div>
+
+                        <!-- Option D -->
+                        <div class="choice-input-row">
+                            <div class="radio-wrap">
+                                <input type="radio" name="form-correct-answer" id="correct-d" value="3">
+                                <label for="correct-d" class="correct-badge" title="Tích chọn nếu đây là ĐÁP ÁN ĐÚNG">D</label>
+                            </div>
+                            <input type="text" id="form-option-3" placeholder="Nội dung phương án D..." required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="form-question-explanation">Giải thích đáp án (Hiển thị cho học viên sau khi thi xong):</label>
+                        <textarea id="form-question-explanation" rows="3" placeholder="Giải thích tại sao phương án được chọn lại đúng, công thức, quy luật..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-classic-footer">
+                <button class="btn btn-outline" id="btn-cancel-question-modal">Huỷ Bỏ</button>
+                <button class="btn btn-primary" id="btn-save-question-modal">Lưu Câu Hỏi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD/EDIT USER MODAL -->
+    <div class="modal-overlay" id="modal-user-form">
+        <div class="modal-card animate-slide-up">
+            <div class="modal-header-classic">
+                <h3 class="modal-classic-title" id="user-modal-title-text">Tạo Tài Khoản Mới</h3>
+                <button class="modal-close-x" id="btn-close-user-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-classic-body">
+                <form id="admin-user-form">
+                    <div class="form-group">
+                        <label for="form-user-username">Tên đăng nhập: <span class="req">*</span></label>
+                        <input type="text" id="form-user-username" placeholder="Ví dụ: teacher_math" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-user-password">Mật khẩu: <span class="req">*</span></label>
+                        <input type="password" id="form-user-password" placeholder="Nhập mật khẩu tài khoản..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-user-name">Họ và Tên hiển thị: <span class="req">*</span></label>
+                        <input type="text" id="form-user-name" placeholder="Ví dụ: Thầy Giáo Ba" required>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="form-user-role">Quyền hạn (Role):</label>
+                            <select id="form-user-role" style="width: 100%; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);">
+                                <option value="student" selected>Student (Học sinh)</option>
+                                <option value="teacher">Teacher (Giáo viên)</option>
+                                <option value="admin">Admin (Quản trị viên)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="form-user-avatar">Ảnh đại diện mặc định:</label>
+                            <select id="form-user-avatar" style="width: 100%; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);">
+                                <option value="user-graduate">Graduate (Học viên)</option>
+                                <option value="user-shield">Shield (Admin)</option>
+                                <option value="user-astronaut">Astronaut (Phi hành gia)</option>
+                                <option value="user-ninja">Ninja</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-classic-footer">
+                <button class="btn btn-outline" id="btn-cancel-user-modal">Huỷ Bỏ</button>
+                <button class="btn btn-success" id="btn-save-user-modal">Lưu Người Dùng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BULK QUESTION IMPORT MODAL -->
+    <div class="modal-overlay" id="modal-bulk-import">
+        <div class="modal-card animate-slide-up" style="max-width: 600px;">
+            <div class="modal-header-classic">
+                <h3 class="modal-classic-title"><i class="fa-solid fa-file-import"></i> Nhập Nhanh Hàng Loạt Câu Hỏi</h3>
+                <button class="modal-close-x" id="btn-close-bulk-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-classic-body">
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Nhập câu hỏi theo định dạng chuẩn bên dưới (mỗi câu cách nhau bởi một dòng trống):</p>
+                <pre style="background: var(--bg-secondary); padding: 10px; border-radius: var(--radius-md); font-size: 11px; margin-bottom: 12px; color: var(--text-muted); overflow-x: auto; line-height: 1.4;">
+Câu hỏi: Ai là người phát minh ra bóng đèn dây tóc?
+A: Thomas Edison
+B: Nikola Tesla
+C: Albert Einstein
+D: Isaac Newton
+Đáp án đúng: A
+Giải thích: Thomas Edison đã đăng ký bằng sáng chế bóng đèn thương mại thành công năm 1879.
+                </pre>
+                <textarea id="bulk-import-textarea" rows="10" placeholder="Dán nội dung câu hỏi của bạn tại đây..." style="width: 100%; font-family: monospace; font-size: 12px; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary);"></textarea>
+            </div>
+            <div class="modal-classic-footer">
+                <button class="btn btn-outline" id="btn-cancel-bulk-modal">Huỷ Bỏ</button>
+                <button class="btn btn-primary" id="btn-submit-bulk-modal"><i class="fa-solid fa-check"></i> Xác Nhận Nhập</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    /* Switch component styles */
+    .switch-premium input:checked + .slider-premium {
+        background-color: var(--primary) !important;
+    }
+    .slider-premium {
+        position: relative;
+        display: block;
+        height: 24px;
+        width: 44px;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    .slider-premium:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    .switch-premium input:checked + .slider-premium:before {
+        transform: translateX(20px);
+    }
+    /* Tab Styling */
+    .admin-nav-tabs .tab-btn {
+        border-bottom: 2px solid transparent !important;
+        border-radius: 0 !important;
+        color: var(--text-secondary) !important;
+    }
+    .admin-nav-tabs .tab-btn.active {
+        color: var(--primary) !important;
+        border-bottom: 2px solid var(--primary) !important;
+        background-color: transparent !important;
+    }
+    </style>
+
+    <!-- TOAST NOTIFICATION CENTER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Core App Scripts (stepped up path) -->
+    <script src="../Students.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../db/exams.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>

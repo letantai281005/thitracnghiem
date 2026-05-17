@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết Quả Bài Thi - QuizFlow</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet (stepped up one level) -->
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+    <!-- APP HEADER -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area" id="logo-btn" onclick="window.location.href='../index.html'">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-main">QuizFlow</span>
+                    <span class="logo-sub">Kết Quả Điểm Số</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item" onclick="window.location.href='../index.html'">
+                    <i class="fa-solid fa-house"></i> Trang Chủ
+                </button>
+            </nav>
+
+            <div class="header-actions">
+                <!-- Theme Toggle Button -->
+                <button class="action-btn" id="theme-toggle" title="Thay đổi giao diện Sáng/Tối">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+
+                <!-- Profile Widget -->
+                <div class="profile-widget">
+                    <div class="avatar-circle">
+                        <i class="fa-solid fa-user-graduate" id="user-avatar-preview"></i>
+                    </div>
+                    <div class="profile-info">
+                        <span class="profile-name" id="user-name-preview">Học Viên</span>
+                        <span class="profile-role">Thí sinh</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="main-content">
+        
+        <!-- RESULT AND DETAILED REVIEW VIEW -->
+        <section id="result-view" class="view-section active">
+            <div class="result-container animate-fade-in">
+                
+                <!-- Score Summary Box -->
+                <div class="result-summary-card">
+                    <h2 class="result-main-heading">Kết Quả Bài Làm Của Bạn</h2>
+                    <p class="result-exam-title" id="result-title-label">Tên đề thi đã hoàn thành</p>
+                    
+                    <!-- Circular percentage gauge -->
+                    <div class="result-score-gauge-wrap">
+                        <div class="score-radial-progress" id="score-radial-widget">
+                            <div class="score-inner-value">
+                                <span class="score-num" id="result-score-percentage">0<span class="pct">%</span></span>
+                                <span class="score-fraction" id="result-score-fraction">0/0 điểm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Evaluation Banner -->
+                    <div class="result-status-banner" id="result-evaluation-banner">
+                        <span>ĐẠT YÊU CẦU</span>
+                    </div>
+
+                    <!-- Details Row -->
+                    <div class="result-metrics-grid">
+                        <div class="metric-box">
+                            <span class="m-val color-success" id="result-metric-correct">0</span>
+                            <span class="m-lbl">Đúng</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="m-val color-danger" id="result-metric-incorrect">0</span>
+                            <span class="m-lbl">Sai</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="m-val color-muted" id="result-metric-unanswered">0</span>
+                            <span class="m-lbl">Bỏ qua</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="m-val color-info" id="result-metric-time">0m</span>
+                            <span class="m-lbl">Thời gian</span>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Action Buttons -->
+                    <div class="result-buttons-row">
+                        <button class="btn btn-outline" id="btn-result-to-dashboard" onclick="window.location.href='../index.html'">
+                            <i class="fa-solid fa-house"></i> Về Trang Chủ
+                        </button>
+                        <button class="btn btn-primary" id="btn-toggle-detailed-review">
+                            <i class="fa-solid fa-eye"></i> Xem Lại Đáp Án Chi Tiết
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Detailed Answer Review Area (Initially hidden, toggles on demand) -->
+                <div class="detailed-review-panel hidden" id="detailed-review-container">
+                    <div class="review-panel-header">
+                        <h3><i class="fa-solid fa-list-check"></i> Chi Tiết Từng Câu Hỏi & Đáp Án</h3>
+                        <p class="subtitle">Xem lại các lựa chọn của bạn và so sánh với đáp án đúng cùng giải thích.</p>
+                    </div>
+
+                    <!-- Review Card List -->
+                    <div class="review-questions-list" id="review-questions-list-root">
+                        <!-- Questions with correctness highlights will be rendered here -->
+                    </div>
+
+                    <div class="review-panel-footer">
+                        <button class="btn btn-primary" id="btn-review-back-to-dashboard" onclick="window.location.href='../index.html'">
+                            <i class="fa-solid fa-circle-left"></i> Hoàn tất & Quay lại Trang chủ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- TOAST NOTIFICATION CENTER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Core App Scripts (stepped up path) -->
+    <script src="../Students.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/result.js"></script>
+</body>
+</html>

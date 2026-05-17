@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - QuizFlow</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.5);
+            --secondary: #a855f7;
+            --secondary-glow: rgba(168, 85, 247, 0.4);
+            --bg-dark: #090a0f;
+            --card-bg: rgba(17, 18, 27, 0.7);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(99, 102, 241, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 40px 20px;
+        }
+
+        /* Glowing backdrop blobs */
+        .glow-blob {
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            filter: blur(130px);
+            z-index: 1;
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .blob-1 {
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+            top: -10%;
+            left: -10%;
+            animation: floatBlob 12s infinite alternate;
+        }
+
+        .blob-2 {
+            background: radial-gradient(circle, var(--secondary) 0%, transparent 70%);
+            bottom: -10%;
+            right: -10%;
+            animation: floatBlob 15s infinite alternate-reverse;
+        }
+
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, 40px) scale(1.05); }
+            100% { transform: translate(-30px, -20px) scale(0.95); }
+        }
+
+        /* Signup container */
+        .register-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .register-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        /* Header logo */
+        .brand-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .brand-logo {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: #fff;
+            margin: 0 auto 12px;
+            box-shadow: 0 8px 18px var(--primary-glow);
+        }
+
+        .brand-name {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Input styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e5e7eb;
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 16px 12px 48px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--border-focus);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Custom avatar picker grid */
+        .avatar-picker-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e5e7eb;
+            margin-bottom: 10px;
+        }
+
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .avatar-option {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .avatar-option:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .avatar-option.selected {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 6px 15px var(--primary-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Message Banner */
+        .msg-banner {
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .banner-error {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+        }
+
+        .banner-success {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #34d399;
+        }
+
+        /* Action Buttons */
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 18px var(--primary-glow);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px var(--primary-glow), 0 0 15px var(--secondary-glow);
+            filter: brightness(1.1);
+        }
+
+        .btn-submit:active {
+            transform: translateY(1px);
+        }
+
+        .register-footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .login-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link:hover {
+            color: var(--secondary);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow-blob blob-1"></div>
+    <div class="glow-blob blob-2"></div>
+
+    <div class="register-container">
+        <div class="register-card">
+            
+            <div class="brand-header">
+                <div class="brand-logo">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h1 class="brand-name">Tạo Tài Khoản</h1>
+                <p class="brand-subtitle">Khởi đầu hành trình học tập tuyệt vời của bạn</p>
+            </div>
+
+            <div class="msg-banner" id="msg-banner">
+                <i class="fas fa-circle-exclamation" id="banner-icon"></i>
+                <span id="banner-text">Thông báo lỗi!</span>
+            </div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label class="form-label" for="fullname">Họ và tên</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-signature input-icon"></i>
+                        <input class="form-input" type="text" id="fullname" placeholder="Nhập họ và tên..." required autocomplete="name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="username">Tên đăng nhập</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input class="form-input" type="text" id="username" placeholder="Chọn tên tài khoản..." required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input class="form-input" type="password" id="password" placeholder="Nhập mật khẩu an toàn..." required autocomplete="new-password">
+                    </div>
+                </div>
+
+                <!-- Avatar selector -->
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="avatar-picker-label">Chọn hình ảnh đại diện</label>
+                    <div class="avatar-grid">
+                        <div class="avatar-option selected" data-avatar="user-graduate" title="Học viên">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="avatar-option" data-avatar="user-astronaut" title="Phi hành gia">
+                            <i class="fas fa-user-astronaut"></i>
+                        </div>
+                        <div class="avatar-option" data-avatar="user-ninja" title="Ninja">
+                            <i class="fas fa-user-ninja"></i>
+                        </div>
+                        <div class="avatar-option" data-avatar="user-scientist" title="Nhà khoa học">
+                            <i class="fas fa-user-scientist"></i>
+                        </div>
+                        <div class="avatar-option" data-avatar="user-doctor" title="Bác sĩ">
+                            <i class="fas fa-user-doctor"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-submit" type="submit">
+                    <i class="fas fa-check-circle"></i> &nbsp; Hoàn Tất Đăng Ký
+                </button>
+            </form>
+
+            <div class="register-footer">
+                Đã có tài khoản? <a href="login.html" class="login-link">Đăng nhập ngay</a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Core Database Scripts -->
+    <script src="Students.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        let selectedAvatar = "user-graduate";
+
+        // Grid selection logic
+        const avatarOpts = document.querySelectorAll('.avatar-option');
+        avatarOpts.forEach(opt => {
+            opt.addEventListener('click', () => {
+                avatarOpts.forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+                selectedAvatar = opt.getAttribute('data-avatar');
+            });
+        });
+
+        // Registration form submission logic
+        document.getElementById('register-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const fullname = document.getElementById('fullname').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const banner = document.getElementById('msg-banner');
+            const icon = document.getElementById('banner-icon');
+            const text = document.getElementById('banner-text');
+
+            const res = Students.register(username, password, fullname, selectedAvatar);
+
+            if (res.success) {
+                // Success message
+                banner.className = "msg-banner banner-success";
+                icon.className = "fas fa-check-circle";
+                text.textContent = "Đăng ký thành công! Đang chuyển hướng sang đăng nhập...";
+                banner.style.display = "flex";
+
+                // Disable form
+                document.querySelectorAll('input, button').forEach(el => el.disabled = true);
+
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 1500);
+            } else {
+                // Error message
+                banner.className = "msg-banner banner-error";
+                icon.className = "fas fa-circle-exclamation";
+                text.textContent = res.message;
+                banner.style.display = "flex";
+
+                // Shake animation
+                const card = document.querySelector('.register-card');
+                card.style.animation = 'shake 0.4s';
+                setTimeout(() => card.style.animation = '', 400);
+            }
+        });
+
+        // Simple shake style injection
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-8px); }
+                75% { transform: translateX(8px); }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+    </script>
+</body>
+</html>

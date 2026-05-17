@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Thi Trắc Nghiệm - QuizFlow</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet (stepped up one level) -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* Specific page override to prevent accidental navigation */
+        .app-header {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        
+        .logo-area {
+            cursor: pointer;
+        }
+
+        .exam-status-indicator {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: pulseFade 2s infinite;
+        }
+
+        @keyframes pulseFade {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- APP HEADER -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area" id="logo-btn" onclick="triggerExitExam()">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-main">QuizFlow</span>
+                    <span class="logo-sub">Đang Thi Trắc Nghiệm</span>
+                </div>
+            </div>
+
+            <div class="exam-status-indicator">
+                <i class="fas fa-circle"></i> ĐANG TRONG PHÒNG THI
+            </div>
+
+            <div class="header-actions">
+                <!-- Theme Toggle Button -->
+                <button class="action-btn" id="theme-toggle" title="Thay đổi giao diện Sáng/Tối">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+
+                <!-- Profile widget -->
+                <div class="profile-widget">
+                    <div class="avatar-circle">
+                        <i class="fa-solid fa-user-graduate" id="user-avatar-preview"></i>
+                    </div>
+                    <div class="profile-info">
+                        <span class="profile-name" id="user-name-preview">Học Viên</span>
+                        <span class="profile-role">Thí sinh</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="main-content">
+        
+        <!-- EXAM ENVIRONMENT VIEW -->
+        <section id="exam-view" class="view-section active">
+            <div class="exam-layout">
+                
+                <!-- Main Question Area -->
+                <div class="exam-main-panel">
+                    <!-- Progress and Details Bar -->
+                    <div class="exam-details-header">
+                        <div class="exam-meta">
+                            <span class="exam-subject-badge" id="exam-current-subject">Môn Học</span>
+                            <h2 class="exam-title-text" id="exam-current-title">Tên Đề Thi Đang Chọn Làm</h2>
+                        </div>
+                        
+                        <!-- Timer Block -->
+                        <div class="timer-container" id="exam-timer-widget">
+                            <div class="timer-circle-wrap">
+                                <svg class="timer-svg" viewBox="0 0 36 36">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path class="circle" id="timer-progress-circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <div class="timer-text" id="timer-countdown">00:00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Exam Progress Bar -->
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="exam-progress-bar" style="width: 0%;"></div>
+                        <span class="progress-text" id="exam-progress-text">Tiến trình làm bài: 0/0 câu</span>
+                    </div>
+
+                    <!-- Question Container -->
+                    <div class="question-card" id="question-card-container">
+                        <div class="question-header">
+                            <span class="question-index-tag" id="current-question-index-label">Câu hỏi 1:</span>
+                            <button class="flag-toggle-btn" id="btn-flag-question" title="Đánh dấu câu hỏi này để xem lại sau">
+                                <i class="fa-regular fa-flag"></i> Đánh dấu xem lại
+                            </button>
+                        </div>
+                        <div class="question-content-box">
+                            <p class="question-text" id="current-question-text">Đang tải nội dung câu hỏi...</p>
+                        </div>
+                        
+                        <!-- Answers Choices Grid -->
+                        <div class="options-container" id="options-list-container">
+                            <!-- Option cards dynamically rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Navigation Action Buttons -->
+                    <div class="exam-actions-row">
+                        <button class="btn btn-outline" id="btn-prev-question">
+                            <i class="fa-solid fa-chevron-left"></i> Câu Trước
+                        </button>
+                        <button class="btn btn-outline-warning" id="btn-quick-flag">
+                            <i class="fa-solid fa-flag"></i> Đánh Dấu
+                        </button>
+                        <button class="btn btn-outline" id="btn-next-question">
+                            Câu Sau <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button class="btn btn-primary" id="btn-finalize-exam">
+                            Nộp Bài Thi <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar: Question Matrix Map -->
+                <aside class="exam-sidebar">
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title"><i class="fa-solid fa-list-check"></i> Sơ đồ Câu hỏi</h3>
+                        
+                        <!-- Legend description -->
+                        <div class="sidebar-legend">
+                            <div class="legend-item"><span class="legend-dot status-unanswered"></span> Chưa làm</div>
+                            <div class="legend-item"><span class="legend-dot status-answered"></span> Đã trả lời</div>
+                            <div class="legend-item"><span class="legend-dot status-flagged"></span> Cần xem lại</div>
+                        </div>
+
+                        <!-- Question Numbers Grid Map -->
+                        <div class="question-grid-map" id="questions-grid-map-container">
+                            <!-- Render numbers buttons here like 1, 2, 3... -->
+                        </div>
+
+                        <!-- Info Section -->
+                        <div class="sidebar-summary-info">
+                            <div class="info-row">
+                                <span>Tổng số câu hỏi:</span>
+                                <strong id="sidebar-total-q">0</strong>
+                            </div>
+                            <div class="info-row">
+                                <span>Đã hoàn thành:</span>
+                                <strong class="color-success" id="sidebar-answered-q">0</strong>
+                            </div>
+                            <div class="info-row">
+                                <span>Đánh dấu review:</span>
+                                <strong class="color-warning" id="sidebar-flagged-q">0</strong>
+                            </div>
+                        </div>
+
+                        <!-- Emergency Submit Button -->
+                        <button class="btn btn-danger btn-full" id="btn-emergency-submit">
+                            <i class="fa-solid fa-check-double"></i> Hoàn Thành & Nộp Bài
+                        </button>
+                    </div>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <!-- SUBMIT CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="modal-submit-confirm">
+        <div class="modal-card animate-slide-up">
+            <div class="modal-icon-header color-warning">
+                <i class="fa-solid fa-circle-question"></i>
+            </div>
+            <h3 class="modal-title">Nộp Bài Thi Trắc Nghiệm?</h3>
+            <p class="modal-body-text">Bạn có chắc chắn muốn kết thúc bài làm và nộp bài thi ngay bây giờ? Hệ thống sẽ ghi nhận và chấm điểm ngay lập tức.</p>
+            
+            <div class="exam-submit-breakdown">
+                <div class="breakdown-item">
+                    <span class="lbl">Tổng số câu hỏi:</span>
+                    <strong class="val" id="confirm-total-q">0</strong>
+                </div>
+                <div class="breakdown-item">
+                    <span class="lbl">Đã chọn đáp án:</span>
+                    <strong class="val color-success" id="confirm-answered-q">0</strong>
+                </div>
+                <div class="breakdown-item">
+                    <span class="lbl">Còn bỏ trống:</span>
+                    <strong class="val color-danger" id="confirm-unanswered-q">0</strong>
+                </div>
+                <div class="breakdown-item">
+                    <span class="lbl">Cần xem lại (Flag):</span>
+                    <strong class="val color-warning" id="confirm-flagged-q">0</strong>
+                </div>
+            </div>
+
+            <div class="modal-actions-row">
+                <button class="btn btn-outline" id="btn-confirm-cancel">Quay Lại Làm Tiếp</button>
+                <button class="btn btn-primary" id="btn-confirm-submit">Xác Nhận Nộp Bài</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CENTER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Core App Scripts (stepped up path) -->
+    <script src="../Students.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/exam.js"></script>
+
+    <script>
+        // Guard against leaving exam accidentally
+        window.addEventListener('beforeunload', (e) => {
+            e.preventDefault();
+            e.returnValue = 'Bạn có chắc chắn muốn rời phòng thi? Toàn bộ quá trình làm bài hiện tại sẽ bị hủy bỏ!';
+        });
+
+        function triggerExitExam() {
+            if (confirm("Cảnh báo: Nếu bạn quay lại Trang chủ lúc này, kết quả bài thi hiện tại sẽ không được lưu! Bạn vẫn muốn tiếp tục?")) {
+                window.location.href = '../index.html';
+            }
+        }
+    </script>
+</body>
+</html>

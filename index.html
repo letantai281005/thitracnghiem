@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizFlow - Hệ Thống Thi Trắc Nghiệm Trực Tuyến Premium</title>
+    <!-- Meta Descriptions for SEO -->
+    <meta name="description" content="Trải nghiệm hệ thống thi trắc nghiệm trực tuyến hiện đại, mượt mà và trực quan bậc nhất. Luyện đề thi Tin học, Tiếng Anh, Lịch sử với giao diện làm bài chuyên nghiệp và thống kê chi tiết kết quả.">
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- APP HEADER -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area" id="logo-btn">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-main">QuizFlow</span>
+                    <span class="logo-sub">Đồ Án Cơ Sở</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" id="nav-dashboard">
+                    <i class="fa-solid fa-house"></i> Trang Chủ
+                </button>
+                <button class="nav-item" id="nav-admin" style="display: none;">
+                    <i class="fa-solid fa-sliders"></i> Quản Trị Viên
+                </button>
+            </nav>
+
+            <div class="header-actions">
+                <!-- Theme Toggle Button -->
+                <button class="action-btn" id="theme-toggle" title="Thay đổi giao diện Sáng/Tối">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+
+                <!-- Profile Dropdown Trigger -->
+                <div class="profile-widget" id="profile-widget-trigger">
+                    <div class="avatar-circle">
+                        <i class="fa-solid fa-user-graduate" id="user-avatar-preview"></i>
+                    </div>
+                    <div class="profile-info">
+                        <span class="profile-name" id="user-name-preview">Học Viên</span>
+                        <span class="profile-role" id="user-role-preview">Thí sinh</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down profile-arrow"></i>
+
+                    <!-- Profile Dropdown Content -->
+                    <div class="profile-dropdown" id="profile-dropdown-content">
+                        <div class="dropdown-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Cấu Hình Tài Khoản</span>
+                            <span class="badge" id="user-role-badge" style="font-size: 10px; font-weight: 700; background: var(--primary-light); color: var(--primary-dark); padding: 2px 6px; border-radius: 4px;">Thí sinh</span>
+                        </div>
+                        <div class="dropdown-body" style="padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid var(--border-color);">
+                            <div class="form-group">
+                                <label for="input-profile-name">Tên hiển thị:</label>
+                                <input type="text" id="input-profile-name" placeholder="Nhập tên của bạn...">
+                            </div>
+                            <div class="form-group">
+                                <label>Chọn ảnh đại diện:</label>
+                                <div class="avatar-selector">
+                                    <div class="avatar-opt active" data-avatar="user-graduate" title="Học viên">
+                                        <i class="fa-solid fa-user-graduate"></i>
+                                    </div>
+                                    <div class="avatar-opt" data-avatar="user-astronaut" title="Phi hành gia">
+                                        <i class="fa-solid fa-user-astronaut"></i>
+                                    </div>
+                                    <div class="avatar-opt" data-avatar="user-ninja" title="Ninja">
+                                        <i class="fa-solid fa-user-ninja"></i>
+                                    </div>
+                                    <div class="avatar-opt" data-avatar="user-scientist" title="Nhà khoa học">
+                                        <i class="fa-solid fa-user-scientist"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-primary" id="save-profile-btn" style="width: 100%; margin-top: 4px;">
+                                <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
+                            </button>
+                        </div>
+                        <div class="dropdown-footer-actions" style="padding: 4px 0; background: var(--bg-tertiary);">
+                            <a href="#" class="dropdown-item logout-btn" style="display: flex; align-items: center; gap: 10px; padding: 10px 18px; color: #f43f5e; font-size: 13px; font-weight: 600; text-decoration: none; transition: background 0.2s; cursor: pointer;">
+                                <i class="fas fa-sign-out-alt"></i> Đăng xuất tài khoản
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="main-content">
+        
+        <!-- ==============================================
+             STUDENT DASHBOARD VIEW
+             ============================================== -->
+        <section id="dashboard-view" class="view-section active">
+            <!-- Hero Welcome Card -->
+            <div class="dashboard-hero">
+                <div class="hero-text">
+                    <h1 class="hero-title" id="dashboard-greeting">Chào buổi sáng, Học Viên!</h1>
+                    <p class="hero-desc">Chào mừng bạn đến với QuizFlow. Hãy lựa chọn một bài kiểm tra bên dưới để bắt đầu thử sức và đánh giá năng lực của mình ngay hôm nay!</p>
+                </div>
+                <div class="hero-graphics">
+                    <i class="fa-solid fa-brain-circuit brain-icon"></i>
+                </div>
+            </div>
+
+            <!-- Statistical Dashboard Rows -->
+            <div class="stats-grid">
+                <div class="stat-card card-primary">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Bài Thi Đã Hoàn Thành</span>
+                        <h3 class="stat-value" id="stat-total-completed">0</h3>
+                    </div>
+                </div>
+                <div class="stat-card card-success">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-chart-simple"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Điểm Số Trung Bình</span>
+                        <h3 class="stat-value" id="stat-avg-score">0.0<span class="stat-sub">%</span></h3>
+                    </div>
+                </div>
+                <div class="stat-card card-warning">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Tỷ Lệ Vượt Qua (Đạt)</span>
+                        <h3 class="stat-value" id="stat-pass-rate">0<span class="stat-sub">%</span></h3>
+                    </div>
+                </div>
+                <div class="stat-card card-info">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Thời Gian Làm Bài</span>
+                        <h3 class="stat-value" id="stat-total-time">0<span class="stat-sub">phút</span></h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vào phòng thi bằng mã đề -->
+            <div class="code-entry-card" style="background: var(--glass-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: var(--shadow-sm); margin-bottom: 30px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 46px; height: 46px; border-radius: var(--radius-md); background: rgba(79, 70, 229, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: var(--shadow-inset);">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Vào Phòng Thi Bằng Mã Đề Đặc Quyền</h3>
+                        <p style="font-size: 13px; color: var(--text-secondary);">Nhập mã đề gồm 5 ký tự ngẫu nhiên do giáo viên/quản trị viên cung cấp để tham gia làm bài ngay.</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="input-exam-code" maxlength="5" placeholder="Ví dụ: A8B9C" style="width: 180px; padding: 12px 16px; font-size: 14px; font-weight: 700; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-primary); color: var(--text-primary); text-transform: uppercase; letter-spacing: 2px; text-align: center; transition: all var(--transition-fast);">
+                    <button class="btn btn-primary" id="btn-enter-by-code" style="padding: 12px 24px;">
+                        Vào Thi &nbsp;<i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subject Category Filters & Search -->
+            <div class="filter-bar">
+                <div class="filter-tabs" id="subject-tabs-container">
+                    <button class="tab-btn active" data-subject="all">Tất cả bài thi</button>
+                    <button class="tab-btn" data-subject="Tin học">Tin học</button>
+                    <button class="tab-btn" data-subject="Tiếng Anh">Tiếng Anh</button>
+                    <button class="tab-btn" data-subject="Lịch sử">Lịch sử</button>
+                    <button class="tab-btn" data-subject="Khác">Tự tạo/Khác</button>
+                </div>
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-exam-input" placeholder="Tìm kiếm đề thi bằng từ khoá...">
+                </div>
+            </div>
+
+            <!-- Dynamic Exam Cards Grid -->
+            <div class="exam-grid-title-row">
+                <h2 class="section-title"><i class="fa-solid fa-file-invoice"></i> Danh sách Đề thi Hiện có</h2>
+                <span class="badge" id="exam-count-badge">0 đề thi</span>
+            </div>
+            <div class="exam-cards-grid" id="exam-list-container">
+                <!-- Exam cards will be rendered dynamically by JavaScript -->
+            </div>
+
+            <!-- Student Quiz History -->
+            <div class="history-section">
+                <div class="history-header">
+                    <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử Làm bài gần đây</h2>
+                    <button class="btn btn-sm btn-outline-danger" id="clear-history-btn">
+                        <i class="fa-solid fa-trash-can"></i> Xoá lịch sử
+                    </button>
+                </div>
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Đề thi</th>
+                                <th>Ngày làm</th>
+                                <th>Thời gian làm</th>
+                                <th>Kết quả / Điểm số</th>
+                                <th>Đánh giá</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body">
+                            <!-- History rows will be rendered dynamically by JavaScript -->
+                        </tbody>
+                    </table>
+                    <div class="no-history-state" id="no-history-placeholder">
+                        <i class="fa-solid fa-folder-open empty-icon"></i>
+                        <p>Bạn chưa tham gia kỳ thi nào. Hãy bắt đầu chọn đề thi phía trên!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- TOAST NOTIFICATION CENTER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Core App Scripts -->
+    <script src="Students.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="db/exams.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

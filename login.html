@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - QuizFlow</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.5);
+            --secondary: #a855f7;
+            --secondary-glow: rgba(168, 85, 247, 0.4);
+            --bg-dark: #090a0f;
+            --card-bg: rgba(17, 18, 27, 0.7);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(99, 102, 241, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Abstract glowing background blobs */
+        .glow-blob {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 1;
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .blob-1 {
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+            top: -10%;
+            left: -10%;
+            animation: floatBlob 12s infinite alternate;
+        }
+
+        .blob-2 {
+            background: radial-gradient(circle, var(--secondary) 0%, transparent 70%);
+            bottom: -10%;
+            right: -10%;
+            animation: floatBlob 15s infinite alternate-reverse;
+        }
+
+        @keyframes floatBlob {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(50px, 30px) scale(1.1);
+            }
+
+            100% {
+                transform: translate(-20px, -40px) scale(0.95);
+            }
+        }
+
+        /* Login Card Frame */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        /* Brand Header */
+        .brand-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #fff;
+            margin: 0 auto 15px;
+            box-shadow: 0 8px 20px var(--primary-glow);
+        }
+
+        .brand-name {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e5e7eb;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px 14px 48px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--border-focus);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        /* Error Banner */
+        .error-banner {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #f87171;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px var(--primary-glow);
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px var(--primary-glow), 0 0 20px var(--secondary-glow);
+            filter: brightness(1.1);
+        }
+
+        .btn-submit:active {
+            transform: translateY(1px);
+        }
+
+        /* Footer links */
+        .login-footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .login-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link:hover {
+            color: var(--secondary);
+            text-decoration: underline;
+        }
+
+        /* Quick Account Info Helper for test/demo */
+        .quick-accounts {
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px dashed var(--border);
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .account-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin: 2px;
+            color: #e5e7eb;
+            cursor: pointer;
+        }
+
+        .account-badge:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="glow-blob blob-1"></div>
+    <div class="glow-blob blob-2"></div>
+
+    <div class="login-container">
+        <div class="login-card">
+
+            <div class="brand-header">
+                <div class="brand-logo">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h1 class="brand-name">QuizFlow</h1>
+                <p class="brand-subtitle">Trang web thi trắc nghiệm hiện đại bậc nhất</p>
+            </div>
+
+            <div class="error-banner" id="error-banner">
+                <i class="fas fa-circle-exclamation"></i>
+                <span id="error-text">Lỗi đăng nhập!</span>
+            </div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="username">Tên đăng nhập</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input class="form-input" type="text" id="username" placeholder="Nhập tên tài khoản..." required
+                            autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input class="form-input" type="password" id="password" placeholder="Nhập mật khẩu..." required
+                            autocomplete="current-password">
+                    </div>
+                </div>
+
+                <button class="btn-submit" type="submit">
+                    <i class="fas fa-sign-in-alt"></i> &nbsp; Đăng Nhập
+                </button>
+            </form>
+
+            <div class="login-footer">
+                Chưa có tài khoản? <a href="register.html" class="login-link">Đăng ký ngay</a>
+            </div>
+
+            <!-- Demo helper badges -->
+            <div class="quick-accounts">
+                <p style="margin-bottom: 6px;"><i class="fas fa-info-circle"></i> Tài khoản thử nghiệm (Mật khẩu:
+                    <b>123</b>):
+                </p>
+                <div class="account-badge" onclick="fillCreds('student')">student (Học sinh)</div>
+                <div class="account-badge" onclick="fillCreds('admin')">admin (Quản trị)</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Core Database Scripts -->
+    <script src="Students.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        // Fill credentials instantly on clicking demo badges
+        function fillCreds(type) {
+            document.getElementById('username').value = type;
+            document.getElementById('password').value = '123';
+        }
+
+        // Form Submission Logic
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById('username').value;
+            const passwordInput = document.getElementById('password').value;
+            const errorBanner = document.getElementById('error-banner');
+            const errorText = document.getElementById('error-text');
+
+            // Authenticate using database
+            const res = Students.login(usernameInput, passwordInput);
+
+            if (res.success) {
+                errorBanner.style.display = 'none';
+
+                // Redirect user based on role
+                if (res.user.role === 'admin') {
+                    window.location.href = 'trangcon/admin.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } else {
+                errorText.textContent = res.message;
+                errorBanner.style.display = 'flex';
+                // Shake form animation
+                const card = document.querySelector('.login-card');
+                card.style.animation = 'shake 0.4s';
+                setTimeout(() => card.style.animation = '', 400);
+            }
+        });
+
+        // Simple shake animation in JS
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-8px); }
+                75% { transform: translateX(8px); }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+    </script>
+</body>
+
+</html>
