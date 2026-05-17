@@ -130,8 +130,8 @@ const Students = {
         const users = this.getAll();
         const idx = users.findIndex(u => u.username.toLowerCase() === username.trim().toLowerCase());
         if (idx !== -1) {
-            if (users[idx].username === 'admin') {
-                return { success: false, message: "Không thể thay đổi quyền của tài khoản Admin gốc!" };
+            if (users[idx].username === 'admin' || users[idx].role === 'admin') {
+                return { success: false, message: "Không thể thay đổi quyền của tài khoản Quản trị viên!" };
             }
             users[idx].role = newRole;
             localStorage.setItem('quizflow_users', JSON.stringify(users));

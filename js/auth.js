@@ -26,8 +26,8 @@
             return;
         }
 
-        // Role restriction: if on admin page, make sure user is an admin
-        if (path.includes('admin.html') && currentUser.role !== 'admin') {
+        // Role restriction: if on admin page, make sure user is an admin or teacher
+        if (path.includes('admin.html') && currentUser.role !== 'admin' && currentUser.role !== 'teacher') {
             alert("Bạn không có quyền truy cập trang quản trị!");
             window.location.href = dashboardPage;
             return;
@@ -63,7 +63,7 @@
                     <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight: 700; color: var(--text-primary); text-align: left;">
                         ${currentUser.name}
                         <div style="font-size: 10px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
-                            ${currentUser.role === 'admin' ? 'Quản trị viên' : 'Thí sinh'}
+                            ${currentUser.role === 'admin' ? 'Quản trị viên' : (currentUser.role === 'teacher' ? 'Giáo viên' : 'Thí sinh')}
                         </div>
                     </div>
                     <a href="#" class="dropdown-item logout-btn" style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: #ef4444; font-size: 13px; font-weight: 600; text-decoration: none; transition: background 0.2s; cursor: pointer; text-align: left;">
@@ -137,12 +137,14 @@
                 headerName.textContent = currentUser.name;
             }
             if (headerRole) {
-                headerRole.textContent = currentUser.role === 'admin' ? 'Quản trị viên' : 'Thí sinh';
+                headerRole.textContent = currentUser.role === 'admin' ? 'Quản trị viên' : (currentUser.role === 'teacher' ? 'Giáo viên' : 'Thí sinh');
             }
             if (roleBadge) {
-                roleBadge.textContent = currentUser.role === 'admin' ? 'Quản trị viên' : 'Thí sinh';
-                roleBadge.style.background = currentUser.role === 'admin' ? 'rgba(239, 68, 68, 0.15)' : 'var(--primary-light)';
-                roleBadge.style.color = currentUser.role === 'admin' ? '#ef4444' : 'var(--primary-dark)';
+                const isAdmin = currentUser.role === 'admin';
+                const isTeacher = currentUser.role === 'teacher';
+                roleBadge.textContent = isAdmin ? 'Quản trị viên' : (isTeacher ? 'Giáo viên' : 'Thí sinh');
+                roleBadge.style.background = isAdmin ? 'rgba(239, 68, 68, 0.15)' : (isTeacher ? 'rgba(14, 165, 233, 0.15)' : 'var(--primary-light)');
+                roleBadge.style.color = isAdmin ? '#ef4444' : (isTeacher ? '#0ea5e9' : 'var(--primary-dark)');
             }
         }
     }

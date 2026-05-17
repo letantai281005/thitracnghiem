@@ -6,7 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. ROLE & ROUTE GUARD VALIDATION
     const currentUser = Students.getCurrentUser();
-    if (!currentUser || currentUser.role !== 'admin') return; // Handled by auth guard
+    if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'teacher')) return; // Handled by auth guard
 
     let state = {
         exams: [],
@@ -781,7 +781,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Actions HTML
             let actionButtons = '';
-            if (user.username !== 'admin') {
+            if (user.username === 'admin') {
+                actionButtons = `<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Quyền Tối Cao (Không thể sửa)</span>`;
+            } else if (user.role === 'admin' && currentUser.role === 'teacher') {
+                actionButtons = `<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Quản trị viên (Không thể sửa)</span>`;
+            } else {
                 const blockIcon = isBlocked ? 'fa-unlock' : 'fa-lock';
                 const blockTitle = isBlocked ? 'Mở khoá tài khoản' : 'Khoá tài khoản';
                 const blockClass = isBlocked ? 'btn-outline-success' : 'btn-outline-warning';
@@ -801,8 +805,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                     </div>
                 `;
-            } else {
-                actionButtons = `<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Quyền Tối Cao (Không thể sửa)</span>`;
             }
 
             tr.innerHTML = `

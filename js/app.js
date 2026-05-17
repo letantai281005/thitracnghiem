@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentUser = Students.getCurrentUser();
     if (!currentUser) return; // Route guard will handle redirect
 
-    // Display admin navigation link if role permits
-    if (currentUser.role === 'admin') {
+    // Display admin navigation link if role permits (admin and teacher)
+    if (currentUser.role === 'admin' || currentUser.role === 'teacher') {
         const adminBtn = document.getElementById('nav-admin');
         if (adminBtn) adminBtn.style.display = 'inline-block';
     }
