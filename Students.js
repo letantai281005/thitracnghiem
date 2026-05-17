@@ -205,8 +205,6 @@ document.addEventListener('click', function(e) {
     if (btn) {
         e.preventDefault();
         e.stopPropagation();
-        if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?")) {
-            Students.logout();
-        }
+        Students.logout();
     }
 }, true); // Capture phase ensures this runs first and reliably
