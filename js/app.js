@@ -36,7 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load active settings in forms
     const inputName = document.getElementById('input-profile-name');
     // Seed Classrooms and Notifications for demo if empty
-    const seedClassrooms = localStorage.getItem('quizflow_classrooms');
+    let seedClassrooms = localStorage.getItem('quizflow_classrooms');
+    const backupClassrooms = localStorage.getItem('quizflow_classrooms_persistent_backup');
+    
+    // Auto-Recovery: Restore classrooms from backup if main list was cleared
+    if (backupClassrooms && (!seedClassrooms || JSON.parse(seedClassrooms).length === 0)) {
+        seedClassrooms = backupClassrooms;
+        localStorage.setItem('quizflow_classrooms', seedClassrooms);
+    }
+    
     if (!seedClassrooms || JSON.parse(seedClassrooms).length === 0) {
         const demoClassrooms = [
             {
@@ -75,6 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ];
         localStorage.setItem('quizflow_classrooms', JSON.stringify(demoClassrooms));
+        localStorage.setItem('quizflow_classrooms_persistent_backup', JSON.stringify(demoClassrooms));
+    }
+    
+    // Persistent helper to write and backup classroom changes continuously
+    function saveClassrooms(classrooms) {
+        localStorage.setItem('quizflow_classrooms', JSON.stringify(classrooms));
+        localStorage.setItem('quizflow_classrooms_persistent_backup', JSON.stringify(classrooms));
     }
 
     const seedNotifications = localStorage.getItem('quizflow_notifications');
@@ -1745,7 +1760,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         
                         localStorage.setItem('quizflow_notifications', JSON.stringify(notifications));
-                        localStorage.setItem('quizflow_classrooms', JSON.stringify(classrooms));
+                        saveClassrooms(classrooms);
                         
                         // Clear input
                         inputAssignDue.value = '';
@@ -1875,7 +1890,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (classIdx === -1) return;
                     
                     classrooms[classIdx].assignments = classrooms[classIdx].assignments.filter(a => a.id !== assignId);
-                    localStorage.setItem('quizflow_classrooms', JSON.stringify(classrooms));
+                    saveClassrooms(classrooms);
                     
                     showToast("Đã hủy giao bài tập thành công!", "success");
                     setupAssignmentPanel(classrooms[classIdx]);
@@ -1947,7 +1962,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const classrooms = JSON.parse(localStorage.getItem('quizflow_classrooms') || '[]');
                     classrooms.push(newClassroom);
-                    localStorage.setItem('quizflow_classrooms', JSON.stringify(classrooms));
+                    saveClassrooms(classrooms);
                     
                     inputName.value = '';
                     showToast(`Kích hoạt lớp học "${name}" thành công! Mã lớp: ${code}`, "success");
@@ -1993,7 +2008,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         joinedAt: Date.now()
                     });
                     
-                    localStorage.setItem('quizflow_classrooms', JSON.stringify(classrooms));
+                    saveClassrooms(classrooms);
                     inputCode.value = '';
                     
                     showToast(`Đã tham gia lớp học "${classroom.name}" thành công!`, "success");
